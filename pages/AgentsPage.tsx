@@ -21,7 +21,7 @@ const AgentCard: React.FC<{
     onBan: (agent: Agent) => void;
     onDeactivateKeys: (agent: Agent) => void;
     platforms: Platform[]
-}> = ({ agent, onViewHistory, onManageKeys, onAddCredits, onSuspend, onDelete, onDeactivateKeys, platforms }) => {
+}> = ({ agent, onViewHistory, onManageKeys, onAddCredits, onSuspend, onDelete, onBan, onDeactivateKeys, platforms }) => {
     const platformMap = new Map(platforms.map(p => [p.id, p]));
 
     return (
@@ -36,7 +36,7 @@ const AgentCard: React.FC<{
                         <p className="text-2xl font-bold text-blue-600">{agent.credits.toLocaleString()}</p>
                         <p className="text-xs text-slate-500">เครดิตคงเหลือ</p>
                     </div>
-                    <DropdownMenu>
+                    <DropdownMenu trigger={<Button size="sm" variant="secondary">เมนู</Button>}>
                         <DropdownMenuItem onClick={() => onSuspend(agent)}>
                             {agent.status === 'suspended' ? 'เปิดใช้งาน' : 'ระงับ'}
                         </DropdownMenuItem>
