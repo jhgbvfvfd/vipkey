@@ -24,6 +24,7 @@ const handler: Handler = async (event) => {
     };
   }
 
+  // search key within agent-owned keys
   const agentsRes = await fetch(`${FIREBASE_URL}agents.json`);
   if (!agentsRes.ok) {
     return { statusCode: 500, body: JSON.stringify({ ok: false, error: 'FETCH_AGENTS_FAILED' }) };
@@ -46,7 +47,25 @@ const handler: Handler = async (event) => {
     }
   }
 
-  if (!foundKey || !foundAgentId) {
+  // if not found under agents, search standalone keys
+  if (!foundKey) {
+    const standaloneRes = await fetch(`${FIREBASE_URL}standalone_keys.json`);
+    if (!standaloneRes.ok) {
+      return { statusCode: 500, body: JSON.stringify({ ok: false, error: 'FETCH_KEYS_FAILED' }) };
+    }
+    const standaloneData: Record<string, ApiKey & { platformId: string }> | null = await standaloneRes.json();
+    if (standaloneData) {
+      for (const key of Object.values(standaloneData)) {
+        if (key.key === keyParam && key.platformId === platformId) {
+          foundKey = key;
+          foundAgentId = 'standalone';
+          break;
+        }
+      }
+    }
+  }
+
+  if (!foundKey) {
     return {
       statusCode: 404,
       body: JSON.stringify({ ok: false, error: 'KEY_NOT_FOUND', message: 'The provided key does not exist.' }),
