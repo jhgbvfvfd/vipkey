@@ -76,6 +76,10 @@ export const updateAgent = async(agent: Agent): Promise<void> => {
     await setData(`agents/${id}`, agentData);
 }
 
+export const deleteAgent = async(agentId: string): Promise<void> => {
+    await deleteData(`agents/${agentId}`);
+}
+
 export const getStandaloneKeys = async (): Promise<StandaloneKey[]> => {
     const data = await fetchData<Record<string, Omit<StandaloneKey, 'id'>>>('standalone_keys');
     return firebaseObjectToArray(data);

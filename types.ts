@@ -24,6 +24,7 @@ export interface Agent {
   createdAt: string;
   creditHistory?: CreditHistoryEntry[];
   user?: null; // Added for future use
+  status?: 'active' | 'suspended';
 }
 
 export interface StandaloneKey extends ApiKey {
