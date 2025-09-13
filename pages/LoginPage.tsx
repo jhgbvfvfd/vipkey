@@ -43,19 +43,19 @@ const LoginPage: React.FC = () => {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-blue-50 to-slate-200 p-4">
-      <Card className="w-full max-w-sm">
-        <CardHeader className="!p-6">
+    <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-indigo-500 via-sky-500 to-purple-600 p-6">
+      <Card className="w-full max-w-md p-8 bg-white/80 backdrop-blur-lg rounded-2xl shadow-2xl">
+        <CardHeader className="!p-0 mb-6 text-center">
           <div className="flex flex-col items-center">
-              <div className="w-16 h-16 p-2 mb-4 bg-blue-600 text-white rounded-lg flex items-center justify-center shadow-lg">
-                <Logo className="w-10 h-10" />
-              </div>
-              <CardTitle className="text-xl">{t('login')}</CardTitle>
-              <p className="text-slate-500 mt-1">{t('login')}</p>
+            <div className="w-20 h-20 mb-4 bg-blue-600 text-white rounded-xl flex items-center justify-center shadow-lg">
+              <Logo className="w-12 h-12" />
+            </div>
+            <CardTitle className="text-2xl font-bold">{t('login')}</CardTitle>
+            <p className="text-slate-500 mt-1">{t('login')}</p>
           </div>
         </CardHeader>
-        <CardContent className="!pt-0">
-          <form onSubmit={handleSubmit} className="space-y-4">
+        <CardContent className="!p-0">
+          <form onSubmit={handleSubmit} className="space-y-5">
             <Input
               id="username"
               label={t('username')}
@@ -80,7 +80,7 @@ const LoginPage: React.FC = () => {
               rightElement={
                 <button
                   type="button"
-                  onClick={() => setShowPassword(p => !p)}
+                  onClick={() => setShowPassword((p) => !p)}
                   className="text-slate-400 hover:text-slate-600"
                 >
                   {showPassword ? <EyeSlashIcon className="w-5 h-5" /> : <EyeIcon className="w-5 h-5" />}
@@ -101,7 +101,7 @@ const LoginPage: React.FC = () => {
                 ลืมรหัสผ่าน?
               </a>
             </div>
-            <Button type="submit" className="w-full !py-2.5 mt-2" disabled={loading}>
+            <Button type="submit" className="w-full !py-3 mt-4" disabled={loading}>
               {loading ? 'กำลังตรวจสอบ...' : t('login')}
             </Button>
           </form>
@@ -112,3 +112,4 @@ const LoginPage: React.FC = () => {
 };
 
 export default LoginPage;
+
