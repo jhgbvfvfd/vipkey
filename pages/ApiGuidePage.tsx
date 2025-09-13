@@ -1,8 +1,6 @@
 import React from 'react';
 import Card, { CardHeader, CardTitle, CardContent } from '../components/ui/Card';
 import Button from '../components/ui/Button';
-import PageHeader from '../components/ui/PageHeader';
-import { BookOpenIcon } from '@heroicons/react/24/outline';
 import { useSettings } from '../App';
 
 const CodeBlock: React.FC<{ children: string; language?: string }> = ({ children, language = 'bash' }) => {
@@ -51,14 +49,6 @@ const ApiGuidePage: React.FC = () => {
   const { t } = useSettings();
   return (
     <div className="max-w-screen-md mx-auto space-y-6">
-        <div>
-            <PageHeader
-              icon={<BookOpenIcon className="w-5 h-5" />}
-              title={t('apiGuideTitle')}
-              description={t('apiGuideDesc')}
-            />
-        </div>
-
         <EndpointCard step={1} title="ตรวจสอบเครดิตของคีย์">
             <p>ตรวจสอบความถูกต้องของคีย์และจำนวนโทเค็นที่เหลืออยู่</p>
             <CodeBlock>

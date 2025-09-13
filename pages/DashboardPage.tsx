@@ -2,9 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { useData, useSettings } from '../App';
 import Card, { CardHeader, CardTitle, CardContent } from '../components/ui/Card';
-import PageHeader from '../components/ui/PageHeader';
 import { Agent, Platform } from '../types';
-import { HomeIcon } from '@heroicons/react/24/outline';
 import { Line } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
@@ -52,12 +50,6 @@ const DashboardPage: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        icon={<HomeIcon className="w-5 h-5" />}
-        title={t('dashboardTitle')}
-        description={t('dashboardDesc')}
-      />
-
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             <StatCard title="ตัวแทนทั้งหมด" value={agents.length} icon={<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-4.598M12 14.25a5.25 5.25 0 100-10.5 5.25 5.25 0 000 10.5z" /></svg>} />
             <StatCard title="แพลตฟอร์มทั้งหมด" value={platforms.length} icon={<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M9 17.25v1.007a3 3 0 01-.879 2.122L7.5 21h9l-1.621-.621A3 3 0 0115 18.257V17.25m6-12V15a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 15V5.25A2.25 2.25 0 015.25 3h9.75a2.25 2.25 0 012.25 2.25z" /></svg>} />

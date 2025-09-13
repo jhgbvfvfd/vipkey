@@ -1,6 +1,4 @@
 import React from 'react';
-import PageHeader from '../components/ui/PageHeader';
-import { Cog6ToothIcon } from '@heroicons/react/24/outline';
 import Card, { CardHeader, CardTitle, CardContent } from '../components/ui/Card';
 import ToggleSwitch from '../components/ui/ToggleSwitch';
 import Button from '../components/ui/Button';
@@ -16,7 +14,6 @@ const SettingsPage: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <PageHeader icon={<Cog6ToothIcon className="w-5 h-5" />} title={t('settingsTitle')} description={t('settingsDesc')} />
       <Card className="max-w-md mx-auto">
         <CardHeader>
           <CardTitle>{t('general')}</CardTitle>

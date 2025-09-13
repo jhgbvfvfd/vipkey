@@ -8,8 +8,6 @@ import Button from '../components/ui/Button';
 import Card, { CardHeader, CardTitle, CardContent } from '../components/ui/Card';
 import Modal from '../components/ui/Modal';
 import Input from '../components/ui/Input';
-import PageHeader from '../components/ui/PageHeader';
-import { UserGroupIcon } from '@heroicons/react/24/outline';
 import { DropdownMenu, DropdownMenuItem } from '../components/ui/Dropdown';
 import { MagnifyingGlassIcon } from '@heroicons/react/24/outline';
 
@@ -328,14 +326,7 @@ const AgentsPage: React.FC = () => {
 
     return (
         <div className="space-y-6">
-             <div className="flex flex-col md:flex-row justify-between md:items-center gap-4">
-                <div className="flex-1">
-                    <PageHeader
-                      icon={<UserGroupIcon className="w-5 h-5" />}
-                      title={t('agentsTitle')}
-                      description={t('agentsDesc')}
-                    />
-                </div>
+            <div className="flex justify-end">
                 <div className="flex items-center gap-2">
                     <Input
                         placeholder="ค้นหา..."

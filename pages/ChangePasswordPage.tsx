@@ -3,8 +3,6 @@ import { useAuth, useSettings } from '../App';
 import Input from '../components/ui/Input';
 import Button from '../components/ui/Button';
 import Card, { CardHeader, CardTitle, CardContent } from '../components/ui/Card';
-import PageHeader from '../components/ui/PageHeader';
-import { LockClosedIcon } from '@heroicons/react/24/outline';
 import { updateAgent } from '../services/firebaseService';
 import { Agent } from '../types';
 
@@ -51,11 +49,6 @@ const ChangePasswordPage: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        icon={<LockClosedIcon className="w-5 h-5" />}
-        title={t('changePasswordTitle')}
-        description={t('changePasswordDesc')}
-      />
       <Card className="max-w-md mx-auto">
         <CardHeader>
           <CardTitle>ตั้งรหัสผ่านใหม่</CardTitle>

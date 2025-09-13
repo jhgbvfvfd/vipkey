@@ -8,8 +8,6 @@ import Button from '../components/ui/Button';
 import Card, { CardHeader, CardTitle, CardContent } from '../components/ui/Card';
 import Modal from '../components/ui/Modal';
 import Input from '../components/ui/Input';
-import PageHeader from '../components/ui/PageHeader';
-import { HomeIcon } from '@heroicons/react/24/outline';
 import { Line } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
@@ -115,12 +113,6 @@ const AgentDashboardPage: React.FC = () => {
 
     return (
         <div className="space-y-6">
-            <PageHeader
-              icon={<HomeIcon className="w-5 h-5" />}
-              title={t('dashboardTitle')}
-              description={t('dashboardDesc')}
-            />
-
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
                 <Card>
                     <CardHeader className="!pb-2"><CardTitle>เครดิตคงเหลือ</CardTitle></CardHeader>

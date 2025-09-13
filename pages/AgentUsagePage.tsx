@@ -1,6 +1,4 @@
 import React from 'react';
-import PageHeader from '../components/ui/PageHeader';
-import { ChartPieIcon } from '@heroicons/react/24/outline';
 import Card, { CardHeader, CardTitle, CardContent } from '../components/ui/Card';
 import { useAuth, useData, useSettings } from '../App';
 import { Agent } from '../types';
@@ -54,8 +52,6 @@ const AgentUsagePage: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <PageHeader icon={<ChartPieIcon className="w-5 h-5" />} title={t('usageTitle')} description={t('usageDesc')} />
-
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="!pb-2"><CardTitle>เครดิตคงเหลือ</CardTitle></CardHeader>

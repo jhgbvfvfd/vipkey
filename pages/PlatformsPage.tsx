@@ -7,8 +7,6 @@ import Card, { CardHeader, CardTitle, CardContent } from '../components/ui/Card'
 import Modal from '../components/ui/Modal';
 import Input from '../components/ui/Input';
 import ToggleSwitch from '../components/ui/ToggleSwitch';
-import PageHeader from '../components/ui/PageHeader';
-import { Squares2X2Icon } from '@heroicons/react/24/outline';
 import { DropdownMenu, DropdownMenuItem } from '../components/ui/Dropdown';
 
 
@@ -124,14 +122,7 @@ const PlatformsPage: React.FC = () => {
     
   return (
     <div className="space-y-6">
-        <div className="flex flex-col md:flex-row justify-between md:items-center gap-4">
-            <div>
-                <PageHeader
-                  icon={<Squares2X2Icon className="w-5 h-5" />}
-                  title={t('platformsTitle')}
-                  description={t('platformsDesc')}
-                />
-            </div>
+        <div className="flex justify-end">
             <Button onClick={() => setAddModalOpen(true)}>+ เพิ่มแพลตฟอร์ม</Button>
         </div>
 

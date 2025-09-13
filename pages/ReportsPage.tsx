@@ -1,6 +1,4 @@
 import React from 'react';
-import PageHeader from '../components/ui/PageHeader';
-import { ChartBarIcon } from '@heroicons/react/24/outline';
 import Card, { CardHeader, CardTitle, CardContent } from '../components/ui/Card';
 import { useData, useSettings } from '../App';
 
@@ -21,8 +19,6 @@ const ReportsPage: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <PageHeader icon={<ChartBarIcon className="w-5 h-5" />} title={t('reportsTitle')} description={t('reportsDesc')} />
-
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="!pb-2"><CardTitle>จำนวนตัวแทน</CardTitle></CardHeader>

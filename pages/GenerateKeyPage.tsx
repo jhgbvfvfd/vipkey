@@ -7,8 +7,6 @@ import Button from '../components/ui/Button';
 import Card, { CardHeader, CardTitle, CardContent } from '../components/ui/Card';
 import Modal from '../components/ui/Modal';
 import Input from '../components/ui/Input';
-import PageHeader from '../components/ui/PageHeader';
-import { KeyIcon } from '@heroicons/react/24/outline';
 
 const KeyRow: React.FC<{ 
     apiKey: StandaloneKey;
@@ -159,14 +157,6 @@ const GenerateKeyPage: React.FC = () => {
 
     return (
         <div className="space-y-6">
-            <div>
-                <PageHeader
-                  icon={<KeyIcon className="w-5 h-5" />}
-                  title={t('generateKeyTitle')}
-                  description={t('generateKeyDesc')}
-                />
-            </div>
-
             <Card className="max-w-xl">
                 <CardHeader>
                     <CardTitle>สร้างคีย์ใหม่</CardTitle>
