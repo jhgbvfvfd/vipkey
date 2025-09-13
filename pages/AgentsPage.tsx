@@ -8,7 +8,6 @@ import Button from '../components/ui/Button';
 import Card, { CardHeader, CardTitle, CardContent } from '../components/ui/Card';
 import Modal from '../components/ui/Modal';
 import Input from '../components/ui/Input';
-import { DropdownMenu, DropdownMenuItem } from '../components/ui/Dropdown';
 import { MagnifyingGlassIcon } from '@heroicons/react/24/outline';
 
 const AgentCard: React.FC<{
@@ -16,19 +15,17 @@ const AgentCard: React.FC<{
     onViewHistory: (agent: Agent) => void;
     onManageKeys: (agent: Agent) => void;
     onAddCredits: (agent: Agent) => void;
-    onSuspend: (agent: Agent) => void;
     onDelete: (agent: Agent) => void;
     onBan: (agent: Agent) => void;
-    onDeactivateKeys: (agent: Agent) => void;
     platforms: Platform[]
-}> = ({ agent, onViewHistory, onManageKeys, onAddCredits, onSuspend, onDelete, onBan, onDeactivateKeys, platforms }) => {
+}> = ({ agent, onViewHistory, onManageKeys, onAddCredits, onDelete, onBan, platforms }) => {
     const platformMap = new Map(platforms.map(p => [p.id, p]));
 
     return (
         <Card>
             <CardHeader className="flex justify-between items-start">
                 <div>
-                    <CardTitle>{agent.username}</CardTitle>
+                    <CardTitle className={agent.status === 'banned' ? 'text-red-600' : undefined}>{agent.username}</CardTitle>
                     <p className="text-xs text-slate-400 font-mono mt-1">{agent.id}</p>
                 </div>
                 <div className="flex items-start gap-2">
@@ -36,20 +33,14 @@ const AgentCard: React.FC<{
                         <p className="text-2xl font-bold text-blue-600">{agent.credits.toLocaleString()}</p>
                         <p className="text-xs text-slate-500">เครดิตคงเหลือ</p>
                     </div>
-                    <DropdownMenu trigger={<Button size="sm" variant="secondary">เมนู</Button>}>
-                        <DropdownMenuItem onClick={() => onSuspend(agent)}>
-                            {agent.status === 'suspended' ? 'เปิดใช้งาน' : 'ระงับ'}
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => onBan(agent)}>
+                    <div className="flex flex-col gap-1">
+                        <Button size="sm" variant={agent.status === 'banned' ? 'secondary' : 'danger'} onClick={() => onBan(agent)}>
                             {agent.status === 'banned' ? 'ปลดแบน' : 'แบน'}
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => onDeactivateKeys(agent)}>
-                            หยุดการทำงาน
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => onDelete(agent)} className="text-red-600 hover:bg-red-50">
+                        </Button>
+                        <Button size="sm" variant="danger" onClick={() => onDelete(agent)}>
                             ลบ
-                        </DropdownMenuItem>
-                    </DropdownMenu>
+                        </Button>
+                    </div>
                 </div>
             </CardHeader>
             <CardContent>
@@ -293,35 +284,16 @@ const AgentsPage: React.FC = () => {
 
     const filteredAgents = agents.filter(a => a.username.toLowerCase().includes(query.toLowerCase()));
 
-    const handleSuspendAgent = async (agent: Agent) => {
-        const updatedAgent = { ...agent, status: agent.status === 'suspended' ? 'active' : 'suspended' };
-        await updateAgent(updatedAgent);
-        refreshData();
-        notify(updatedAgent.status === 'suspended' ? 'ระงับตัวแทนแล้ว' : 'เปิดใช้งานตัวแทนแล้ว');
-    };
-
     const handleBanAgent = async (agent: Agent) => {
         const updatedAgent = { ...agent, status: agent.status === 'banned' ? 'active' : 'banned' };
         await updateAgent(updatedAgent);
         refreshData();
         notify(updatedAgent.status === 'banned' ? 'แบนตัวแทนแล้ว' : 'ปลดแบนตัวแทนแล้ว');
     };
-
     const handleDeleteAgent = async (agent: Agent) => {
         await deleteAgent(agent.id);
         refreshData();
         notify('ลบตัวแทนแล้ว');
-    };
-
-    const handleDeactivateKeys = async (agent: Agent) => {
-        if (!agent.keys) return;
-        const updatedKeys = Object.fromEntries(
-            Object.entries(agent.keys).map(([pid, keys]) => [pid, keys.map(k => ({ ...k, status: 'inactive' }))])
-        );
-        const updatedAgent = { ...agent, keys: updatedKeys };
-        await updateAgent(updatedAgent);
-        refreshData();
-        notify('หยุดการทำงานของคีย์ทั้งหมดแล้ว');
     };
 
     return (
@@ -347,10 +319,8 @@ const AgentsPage: React.FC = () => {
                             onViewHistory={handleOpenHistory}
                             onManageKeys={handleOpenKeys}
                             onAddCredits={handleOpenAddCredits}
-                            onSuspend={handleSuspendAgent}
                             onBan={handleBanAgent}
                             onDelete={handleDeleteAgent}
-                            onDeactivateKeys={handleDeactivateKeys}
                             platforms={platforms}
                         />
                     ))}
