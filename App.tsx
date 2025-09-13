@@ -1,0 +1,210 @@
+
+import React, { useState, useCallback, useMemo, createContext, useContext, useEffect } from 'react';
+import { HashRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
+import LoginPage from './pages/LoginPage';
+import Layout from './components/layout/Layout';
+import DashboardPage from './pages/DashboardPage';
+import PlatformsPage from './pages/PlatformsPage';
+import AgentsPage from './pages/AgentsPage';
+import BotsPage from './pages/BotsPage';
+import ApiGuidePage from './pages/ApiGuidePage';
+import GenerateKeyPage from './pages/GenerateKeyPage';
+import AgentDashboardPage from './pages/AgentDashboardPage';
+import AgentKeysPage from './pages/AgentKeysPage';
+import { Agent, Platform, Bot, StandaloneKey } from './types';
+import { getPlatforms, getAgents, getBots, getStandaloneKeys } from './services/firebaseService';
+
+type UserRole = 'admin' | 'agent';
+interface User {
+    role: UserRole;
+    data: Agent | { username: string };
+}
+
+interface AuthContextType {
+  isAuthenticated: boolean;
+  user: User | null;
+  login: (username: string, password?: string) => Promise<boolean>;
+  logout: () => void;
+}
+
+const AuthContext = createContext<AuthContextType | null>(null);
+
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+};
+
+interface DataContextType {
+    agents: Agent[];
+    platforms: Platform[];
+    bots: Bot[];
+    standaloneKeys: StandaloneKey[];
+    loading: boolean;
+    refreshData: () => void;
+}
+
+const DataContext = createContext<DataContextType | null>(null);
+
+export const useData = () => {
+    const context = useContext(DataContext);
+    if (!context) {
+        throw new Error('useData must be used within a DataProvider');
+    }
+    return context;
+}
+
+const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+    const [agents, setAgents] = useState<Agent[]>([]);
+    const [platforms, setPlatforms] = useState<Platform[]>([]);
+    const [bots, setBots] = useState<Bot[]>([]);
+    const [standaloneKeys, setStandaloneKeys] = useState<StandaloneKey[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    const fetchData = useCallback(async () => {
+        setLoading(true);
+        try {
+            const [platformsData, agentsData, botsData, keysData] = await Promise.all([
+                getPlatforms(),
+                getAgents(),
+                getBots(),
+                getStandaloneKeys(),
+            ]);
+            setPlatforms(platformsData);
+            setAgents(agentsData);
+            setBots(botsData);
+            setStandaloneKeys(keysData);
+        } catch (error) {
+            console.error("Failed to fetch data:", error);
+        } finally {
+            setLoading(false);
+        }
+    }, []);
+
+    useEffect(() => {
+        fetchData();
+    }, [fetchData]);
+
+    const value = useMemo(() => ({
+        agents,
+        platforms,
+        bots,
+        standaloneKeys,
+        loading,
+        refreshData: fetchData,
+    }), [agents, platforms, bots, standaloneKeys, loading, fetchData]);
+    
+    return <DataContext.Provider value={value}>{children}</DataContext.Provider>;
+};
+
+const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+    const [user, setUser] = useState<User | null>(() => {
+        const storedUser = sessionStorage.getItem('user');
+        return storedUser ? JSON.parse(storedUser) : null;
+    });
+
+    const login = useCallback(async (username: string, password?: string): Promise<boolean> => {
+        // Admin Login
+        if (username === 'admin' && password === 'admin') {
+            const adminUser: User = { role: 'admin', data: { username: 'admin' } };
+            sessionStorage.setItem('user', JSON.stringify(adminUser));
+            setUser(adminUser);
+            return true;
+        }
+
+        // Agent Login
+        try {
+            const agents = await getAgents();
+            const foundAgent = agents.find(agent => agent.username === username && agent.password === password);
+            if (foundAgent) {
+                const agentUser: User = { role: 'agent', data: foundAgent };
+                sessionStorage.setItem('user', JSON.stringify(agentUser));
+                setUser(agentUser);
+                return true;
+            }
+        } catch (error) {
+            console.error("Error fetching agents for login:", error);
+        }
+
+        return false;
+    }, []);
+
+    const logout = useCallback(() => {
+        sessionStorage.removeItem('user');
+        setUser(null);
+    }, []);
+
+    const authContextValue = useMemo(() => ({
+        isAuthenticated: !!user,
+        user,
+        login,
+        logout,
+    }), [user, login, logout]);
+
+    return (
+        <AuthContext.Provider value={authContextValue}>
+            {children}
+        </AuthContext.Provider>
+    );
+};
+
+
+const App: React.FC = () => {
+  return (
+    <AuthProvider>
+        <DataProvider>
+            <AppRoutes />
+        </DataProvider>
+    </AuthProvider>
+  );
+};
+
+const AppRoutes: React.FC = () => {
+    const { isAuthenticated } = useAuth();
+    return (
+        <HashRouter>
+            <Routes>
+                <Route path="/login" element={!isAuthenticated ? <LoginPage /> : <Navigate to="/" />} />
+                <Route path="/*" element={isAuthenticated ? <ProtectedRoutes /> : <Navigate to="/login" />} />
+            </Routes>
+        </HashRouter>
+    );
+}
+
+const ProtectedRoutes: React.FC = () => {
+    const { user } = useAuth();
+
+    if (!user) return <Navigate to="/login" />;
+
+    return (
+        <Layout>
+            {user.role === 'admin' && <AdminRoutes />}
+            {user.role === 'agent' && <AgentRoutes />}
+        </Layout>
+    );
+};
+
+const AdminRoutes: React.FC = () => (
+    <Routes>
+        <Route path="/" element={<DashboardPage />} />
+        <Route path="/platforms" element={<PlatformsPage />} />
+        <Route path="/agents" element={<AgentsPage />} />
+        <Route path="/generate-key" element={<GenerateKeyPage />} />
+        <Route path="/bots" element={<BotsPage />} />
+        <Route path="/api-guide" element={<ApiGuidePage />} />
+        <Route path="*" element={<Navigate to="/" />} />
+    </Routes>
+);
+
+const AgentRoutes: React.FC = () => (
+    <Routes>
+        <Route path="/" element={<AgentDashboardPage />} />
+        <Route path="/my-keys" element={<AgentKeysPage />} />
+        <Route path="/bots" element={<BotsPage />} />
+        <Route path="*" element={<Navigate to="/" />} />
+    </Routes>
+);
+
+export default App;
