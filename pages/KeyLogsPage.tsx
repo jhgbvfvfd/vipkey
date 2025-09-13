@@ -2,6 +2,7 @@ import React from 'react';
 import PageHeader from '../components/ui/PageHeader';
 import { useData, useAuth, useSettings } from '../App';
 import { Agent } from '../types';
+import { ServerIcon } from '@heroicons/react/24/outline';
 
 const KeyLogsPage: React.FC = () => {
   const { keyLogs, agents } = useData();
@@ -16,7 +17,10 @@ const KeyLogsPage: React.FC = () => {
     <div className="p-4">
       <PageHeader title={t('logsTitle')} desc={t('logsDesc')} />
       {filteredLogs.length === 0 ? (
-        <p className="text-center text-slate-500 mt-8">{t('noLogs')}</p>
+        <div className="mt-20 flex flex-col items-center text-slate-500 gap-2">
+          <ServerIcon className="w-12 h-12 opacity-50" />
+          <p>{t('noLogs')}</p>
+        </div>
       ) : (
         <div className="overflow-x-auto mt-4">
           <table className="min-w-full bg-white border border-slate-200">
