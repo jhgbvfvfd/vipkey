@@ -47,3 +47,11 @@ export interface Bot {
     url: string;
     addedAt: string;
 }
+
+export interface KeyLog {
+    id: string;
+    key: string;
+    agentId: string;
+    ip: string;
+    usedAt: string;
+}

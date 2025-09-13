@@ -14,6 +14,7 @@ import {
   ChartBarIcon,
   Cog6ToothIcon,
   LockClosedIcon,
+  DocumentMagnifyingGlassIcon,
 } from '@heroicons/react/24/outline';
 
 const NavIcon: React.FC<{ icon: React.ComponentType<React.SVGProps<SVGSVGElement>> }> = ({ icon: Icon }) => (
@@ -38,6 +39,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
       { to: '/bots', text: t('bots'), icon: CpuChipIcon },
       { to: '/api-guide', text: t('apiGuide'), icon: BookOpenIcon },
       { to: '/reports', text: t('reports'), icon: ChartBarIcon },
+      { to: '/logs', text: t('logs'), icon: DocumentMagnifyingGlassIcon },
       { to: '/settings', text: t('settings'), icon: Cog6ToothIcon },
       { to: '/change-password', text: t('changePassword'), icon: LockClosedIcon },
     ];

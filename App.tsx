@@ -18,8 +18,9 @@ import ReportsPage from './pages/ReportsPage';
 import SettingsPage from './pages/SettingsPage';
 import AgentProfilePage from './pages/AgentProfilePage';
 import AgentUsagePage from './pages/AgentUsagePage';
-import { Agent, Platform, Bot, StandaloneKey } from './types';
-import { getPlatforms, getAgents, getBots, getStandaloneKeys } from './services/firebaseService';
+import KeyLogsPage from './pages/KeyLogsPage';
+import { Agent, Platform, Bot, StandaloneKey, KeyLog } from './types';
+import { getPlatforms, getAgents, getBots, getStandaloneKeys, getKeyLogs } from './services/firebaseService';
 
 type UserRole = 'admin' | 'agent';
 interface User {
@@ -49,6 +50,7 @@ interface DataContextType {
     platforms: Platform[];
     bots: Bot[];
     standaloneKeys: StandaloneKey[];
+    keyLogs: KeyLog[];
     loading: boolean;
     refreshData: () => void;
 }
@@ -138,21 +140,24 @@ const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
     const [platforms, setPlatforms] = useState<Platform[]>([]);
     const [bots, setBots] = useState<Bot[]>([]);
     const [standaloneKeys, setStandaloneKeys] = useState<StandaloneKey[]>([]);
+    const [keyLogs, setKeyLogs] = useState<KeyLog[]>([]);
     const [loading, setLoading] = useState(true);
 
     const fetchData = useCallback(async () => {
         setLoading(true);
         try {
-            const [platformsData, agentsData, botsData, keysData] = await Promise.all([
+            const [platformsData, agentsData, botsData, keysData, logsData] = await Promise.all([
                 getPlatforms(),
                 getAgents(),
                 getBots(),
                 getStandaloneKeys(),
+                getKeyLogs(),
             ]);
             setPlatforms(platformsData);
             setAgents(agentsData);
             setBots(botsData);
             setStandaloneKeys(keysData);
+            setKeyLogs(logsData);
         } catch (error) {
             console.error("Failed to fetch data:", error);
         } finally {
@@ -169,9 +174,10 @@ const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
         platforms,
         bots,
         standaloneKeys,
+        keyLogs,
         loading,
         refreshData: fetchData,
-    }), [agents, platforms, bots, standaloneKeys, loading, fetchData]);
+    }), [agents, platforms, bots, standaloneKeys, keyLogs, loading, fetchData]);
     
     return <DataContext.Provider value={value}>{children}</DataContext.Provider>;
 };
@@ -276,6 +282,7 @@ const AdminRoutes: React.FC = () => (
         <Route path="/bots" element={<BotsPage />} />
         <Route path="/api-guide" element={<ApiGuidePage />} />
         <Route path="/reports" element={<ReportsPage />} />
+        <Route path="/logs" element={<KeyLogsPage />} />
         <Route path="/settings" element={<SettingsPage />} />
         <Route path="/change-password" element={<ChangePasswordPage />} />
         <Route path="*" element={<Navigate to="/" />} />
@@ -289,6 +296,7 @@ const AgentRoutes: React.FC = () => (
         <Route path="/bots" element={<BotsPage />} />
         <Route path="/profile" element={<AgentProfilePage />} />
         <Route path="/usage" element={<AgentUsagePage />} />
+        <Route path="/logs" element={<KeyLogsPage />} />
         <Route path="/change-password" element={<ChangePasswordPage />} />
         <Route path="*" element={<Navigate to="/" />} />
     </Routes>
