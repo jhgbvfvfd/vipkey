@@ -13,8 +13,9 @@ interface AgentRecord {
 }
 
 const handler: Handler = async (event) => {
-  const pathParts = event.path.split('/');
-  const platformId = pathParts[pathParts.length - 1];
+  const segments = event.path.split('/').filter(Boolean);
+  // path shape: /api/:platform/credit
+  const platformId = segments[segments.length - 2];
   const keyParam = event.queryStringParameters?.key;
 
   if (!platformId || !keyParam) {
@@ -24,24 +25,37 @@ const handler: Handler = async (event) => {
     };
   }
 
-  // search key within all agent-owned keys
-  const agentsRes = await fetch(`${FIREBASE_URL}agents.json`);
-  if (!agentsRes.ok) {
-    return { statusCode: 500, body: JSON.stringify({ ok: false, error: 'FETCH_AGENTS_FAILED' }) };
-  }
-  const agentsData: Record<string, AgentRecord> | null = await agentsRes.json();
   let foundAgentId: string | null = null;
   let foundKey: ApiKey | null = null;
 
-  if (agentsData) {
-    outer: for (const [agentId, agent] of Object.entries(agentsData)) {
-      const platformKeys = Object.values(agent.keys || {});
-      for (const keys of platformKeys) {
-        const match = keys.find((k) => k.key === keyParam);
-        if (match) {
-          foundAgentId = agentId;
-          foundKey = match;
-          break outer;
+  // first, check platform-specific key store (e.g., qkp_keys)
+  const platformKeyRes = await fetch(
+    `${FIREBASE_URL}${platformId}_keys/${encodeURIComponent(keyParam)}.json`
+  );
+  if (platformKeyRes.ok) {
+    const data: Omit<ApiKey, 'key'> | null = await platformKeyRes.json();
+    if (data) {
+      foundKey = { key: keyParam, ...data };
+    }
+  }
+
+  // search key within all agent-owned keys
+  if (!foundKey) {
+    const agentsRes = await fetch(`${FIREBASE_URL}agents.json`);
+    if (!agentsRes.ok) {
+      return { statusCode: 500, body: JSON.stringify({ ok: false, error: 'FETCH_AGENTS_FAILED' }) };
+    }
+    const agentsData: Record<string, AgentRecord> | null = await agentsRes.json();
+    if (agentsData) {
+      outer: for (const [agentId, agent] of Object.entries(agentsData)) {
+        const platformKeys = Object.values(agent.keys || {});
+        for (const keys of platformKeys) {
+          const match = keys.find((k) => k.key === keyParam);
+          if (match) {
+            foundAgentId = agentId;
+            foundKey = match;
+            break outer;
+          }
         }
       }
     }
