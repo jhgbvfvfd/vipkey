@@ -113,3 +113,11 @@ export const getKeyLogs = async (): Promise<KeyLog[]> => {
     const data = await fetchData<Record<string, Omit<KeyLog, 'id'>>>('key_logs');
     return firebaseObjectToArray(data);
 };
+
+export const recordKeyLog = async (log: Omit<KeyLog, 'id'>): Promise<void> => {
+    await fetch(`${FIREBASE_URL}key_logs.json`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(log),
+    });
+};

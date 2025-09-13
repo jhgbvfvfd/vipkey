@@ -1,0 +1,8 @@
+[functions]
+  directory = "netlify/functions"
+
+[[redirects]]
+  from = "/api/:platform/credit"
+  to = "/.netlify/functions/credit?platform=:platform"
+  status = 200
+  force = true
