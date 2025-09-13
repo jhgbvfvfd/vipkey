@@ -7,6 +7,8 @@ import Button from '../components/ui/Button';
 import Modal from '../components/ui/Modal';
 import Input from '../components/ui/Input';
 import Card from '../components/ui/Card';
+import PageHeader from '../components/ui/PageHeader';
+import { CpuChipIcon } from '@heroicons/react/24/outline';
 
 const BotsPage: React.FC = () => {
     const { bots, loading, refreshData } = useData();
@@ -53,8 +55,11 @@ const BotsPage: React.FC = () => {
         <div className="space-y-6">
             <div className="flex flex-col md:flex-row justify-between md:items-center gap-4">
                 <div>
-                    <h1 className="text-xl font-bold text-slate-800">ไดเรกทอรีบอท</h1>
-                    <p className="text-slate-500">จัดการรายชื่อบอทในระบบของคุณ</p>
+                    <PageHeader
+                      icon={<CpuChipIcon className="w-5 h-5" />}
+                      title="ไดเรกทอรีบอท"
+                      description="จัดการรายชื่อบอทในระบบของคุณ"
+                    />
                 </div>
                 {!isAgent && <Button onClick={() => setIsModalOpen(true)}>+ เพิ่มบอท</Button>}
             </div>

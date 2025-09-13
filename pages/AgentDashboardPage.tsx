@@ -8,6 +8,8 @@ import Button from '../components/ui/Button';
 import Card, { CardHeader, CardTitle, CardContent } from '../components/ui/Card';
 import Modal from '../components/ui/Modal';
 import Input from '../components/ui/Input';
+import PageHeader from '../components/ui/PageHeader';
+import { PlusCircleIcon } from '@heroicons/react/24/outline';
 
 const AgentDashboardPage: React.FC = () => {
     const { platforms, refreshData } = useData();
@@ -84,8 +86,11 @@ const AgentDashboardPage: React.FC = () => {
     return (
         <div className="space-y-6">
             <div>
-                <h1 className="text-xl font-bold text-slate-800">สร้างคีย์</h1>
-                <p className="text-slate-500">ยินดีต้อนรับ, {agent.username}! ใช้เครดิตของคุณเพื่อสร้างคีย์สำหรับแพลตฟอร์มต่างๆ</p>
+                <PageHeader
+                  icon={<PlusCircleIcon className="w-5 h-5" />}
+                  title="สร้างคีย์"
+                  description={`ยินดีต้อนรับ, ${agent.username}! ใช้เครดิตของคุณเพื่อสร้างคีย์สำหรับแพลตฟอร์มต่างๆ`}
+                />
             </div>
 
             <Card>

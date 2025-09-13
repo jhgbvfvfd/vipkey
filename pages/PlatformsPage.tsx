@@ -7,6 +7,8 @@ import Card, { CardHeader, CardTitle, CardContent } from '../components/ui/Card'
 import Modal from '../components/ui/Modal';
 import Input from '../components/ui/Input';
 import ToggleSwitch from '../components/ui/ToggleSwitch';
+import PageHeader from '../components/ui/PageHeader';
+import { Squares2X2Icon } from '@heroicons/react/24/outline';
 
 const DropdownMenu: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [isOpen, setIsOpen] = useState(false);
@@ -158,8 +160,11 @@ const PlatformsPage: React.FC = () => {
     <div className="space-y-6">
         <div className="flex flex-col md:flex-row justify-between md:items-center gap-4">
             <div>
-                <h1 className="text-xl font-bold text-slate-800">จัดการแพลตฟอร์ม</h1>
-                <p className="text-slate-500">เพิ่ม, แก้ไข, และลบแพลตฟอร์มสำหรับสร้างคีย์</p>
+                <PageHeader
+                  icon={<Squares2X2Icon className="w-5 h-5" />}
+                  title="จัดการแพลตฟอร์ม"
+                  description="เพิ่ม, แก้ไข, และลบแพลตฟอร์มสำหรับสร้างคีย์"
+                />
             </div>
             <Button onClick={() => setAddModalOpen(true)}>+ เพิ่มแพลตฟอร์ม</Button>
         </div>

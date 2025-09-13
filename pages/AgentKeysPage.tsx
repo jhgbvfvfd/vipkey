@@ -7,6 +7,8 @@ import { updateAgent } from '../services/firebaseService';
 import Button from '../components/ui/Button';
 import Card, { CardHeader, CardTitle } from '../components/ui/Card';
 import Modal from '../components/ui/Modal';
+import PageHeader from '../components/ui/PageHeader';
+import { KeyIcon } from '@heroicons/react/24/outline';
 
 const KeyRow: React.FC<{ 
     apiKey: ApiKey & { platformId: string, platformTitle: string };
@@ -153,8 +155,11 @@ const AgentKeysPage: React.FC = () => {
     return (
         <div className="space-y-6">
             <div>
-                <h1 className="text-xl font-bold text-slate-800">คีย์ของฉัน</h1>
-                <p className="text-slate-500">จัดการคีย์ทั้งหมดที่คุณได้สร้างไว้</p>
+                <PageHeader
+                  icon={<KeyIcon className="w-5 h-5" />}
+                  title="คีย์ของฉัน"
+                  description="จัดการคีย์ทั้งหมดที่คุณได้สร้างไว้"
+                />
             </div>
              <Card>
                 <CardHeader><CardTitle>รายการคีย์ทั้งหมด</CardTitle></CardHeader>

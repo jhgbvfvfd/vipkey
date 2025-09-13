@@ -7,6 +7,8 @@ import Button from '../components/ui/Button';
 import Card, { CardHeader, CardTitle, CardContent } from '../components/ui/Card';
 import Modal from '../components/ui/Modal';
 import Input from '../components/ui/Input';
+import PageHeader from '../components/ui/PageHeader';
+import { KeyIcon } from '@heroicons/react/24/outline';
 
 const KeyRow: React.FC<{ 
     apiKey: StandaloneKey;
@@ -149,8 +151,11 @@ const GenerateKeyPage: React.FC = () => {
     return (
         <div className="space-y-6">
             <div>
-                <h1 className="text-xl font-bold text-slate-800">สร้างคีย์ทั่วไป</h1>
-                <p className="text-slate-500">สร้างและจัดการคีย์แบบใช้ครั้งเดียวสำหรับแพลตฟอร์มต่างๆ</p>
+                <PageHeader
+                  icon={<KeyIcon className="w-5 h-5" />}
+                  title="สร้างคีย์ทั่วไป"
+                  description="สร้างและจัดการคีย์แบบใช้ครั้งเดียวสำหรับแพลตฟอร์มต่างๆ"
+                />
             </div>
 
             <Card className="max-w-xl">

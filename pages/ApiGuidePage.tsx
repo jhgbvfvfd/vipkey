@@ -2,6 +2,8 @@ import React from 'react';
 import Card, { CardHeader, CardTitle, CardContent } from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import { toast } from 'react-hot-toast';
+import PageHeader from '../components/ui/PageHeader';
+import { BookOpenIcon } from '@heroicons/react/24/outline';
 
 const CodeBlock: React.FC<{ children: string; language?: string }> = ({ children, language = 'bash' }) => {
     const handleCopy = async () => {
@@ -48,8 +50,11 @@ const ApiGuidePage: React.FC = () => {
   return (
     <div className="max-w-screen-md mx-auto space-y-6">
         <div>
-            <h1 className="text-2xl font-bold text-slate-800">คู่มือ API</h1>
-            <p className="text-slate-500">คำแนะนำสำหรับนักพัฒนาในการใช้งาน API</p>
+            <PageHeader
+              icon={<BookOpenIcon className="w-5 h-5" />}
+              title="คู่มือ API"
+              description="คำแนะนำสำหรับนักพัฒนาในการใช้งาน API"
+            />
         </div>
 
         <EndpointCard step={1} title="ตรวจสอบเครดิตของคีย์">

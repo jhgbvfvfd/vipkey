@@ -8,6 +8,8 @@ import Button from '../components/ui/Button';
 import Card, { CardHeader, CardTitle, CardContent } from '../components/ui/Card';
 import Modal from '../components/ui/Modal';
 import Input from '../components/ui/Input';
+import PageHeader from '../components/ui/PageHeader';
+import { UserGroupIcon } from '@heroicons/react/24/outline';
 
 const AgentCard: React.FC<{ 
     agent: Agent; 
@@ -261,8 +263,11 @@ const AgentsPage: React.FC = () => {
         <div className="space-y-6">
              <div className="flex flex-col md:flex-row justify-between md:items-center gap-4">
                 <div>
-                    <h1 className="text-xl font-bold text-slate-800">จัดการตัวแทน</h1>
-                    <p className="text-slate-500">เพิ่มและดูข้อมูลตัวแทนในระบบ</p>
+                    <PageHeader
+                      icon={<UserGroupIcon className="w-5 h-5" />}
+                      title="จัดการตัวแทน"
+                      description="เพิ่มและดูข้อมูลตัวแทนในระบบ"
+                    />
                 </div>
                 <Button onClick={() => setAddAgentModalOpen(true)}>+ เพิ่มตัวแทน</Button>
             </div>
