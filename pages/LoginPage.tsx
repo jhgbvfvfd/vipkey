@@ -4,7 +4,7 @@ import Button from '../components/ui/Button';
 import Input from '../components/ui/Input';
 import Card, { CardHeader, CardTitle, CardContent } from '../components/ui/Card';
 import Logo from '../components/ui/Logo';
-import { UserIcon, LockClosedIcon } from '@heroicons/react/24/outline';
+import { UserIcon, LockClosedIcon, EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
 import { toast } from 'react-hot-toast';
 
 const LoginPage: React.FC = () => {
@@ -12,6 +12,7 @@ const LoginPage: React.FC = () => {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [remember, setRemember] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const { login } = useAuth();
 
   React.useEffect(() => {
@@ -40,7 +41,7 @@ const LoginPage: React.FC = () => {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-slate-100 p-4">
+    <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-blue-50 to-slate-200 p-4">
       <Card className="w-full max-w-sm">
         <CardHeader className="!p-6">
           <div className="flex flex-col items-center">
@@ -67,13 +68,22 @@ const LoginPage: React.FC = () => {
             <Input
               id="password"
               label="รหัสผ่าน"
-              type="password"
+              type={showPassword ? 'text' : 'password'}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
               required
               disabled={loading}
               leftIcon={<LockClosedIcon className="w-5 h-5" />}
+              rightElement={
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(p => !p)}
+                  className="text-slate-400 hover:text-slate-600"
+                >
+                  {showPassword ? <EyeSlashIcon className="w-5 h-5" /> : <EyeIcon className="w-5 h-5" />}
+                </button>
+              }
             />
             <div className="flex items-center justify-between text-sm">
               <label className="flex items-center">

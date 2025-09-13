@@ -9,6 +9,7 @@ import Modal from '../components/ui/Modal';
 import Input from '../components/ui/Input';
 import PageHeader from '../components/ui/PageHeader';
 import { KeyIcon } from '@heroicons/react/24/outline';
+import { toast } from 'react-hot-toast';
 
 const KeyRow: React.FC<{ 
     apiKey: StandaloneKey;
@@ -117,9 +118,11 @@ const GenerateKeyPage: React.FC = () => {
             refreshData();
             setGeneratedKey(newKeyString);
             setIsModalOpen(true);
+            toast.success('สร้างคีย์เรียบร้อย');
         } catch (err) {
             setError('ไม่สามารถสร้างคีย์ได้');
             console.error(err);
+            toast.error('ไม่สามารถสร้างคีย์ได้');
         }
     };
 
@@ -127,6 +130,7 @@ const GenerateKeyPage: React.FC = () => {
         const updatedKey = { ...key, status };
         await updateStandaloneKey(updatedKey);
         refreshData();
+        toast.success(status === 'active' ? 'เปิดใช้งานคีย์แล้ว' : 'ระงับคีย์แล้ว');
     };
 
     const confirmDeleteKey = (key: StandaloneKey) => {
@@ -136,10 +140,15 @@ const GenerateKeyPage: React.FC = () => {
 
     const handleDeleteKey = async () => {
         if (!keyToDelete) return;
-        await deleteStandaloneKey(keyToDelete.id);
-        refreshData();
-        setConfirmDeleteOpen(false);
-        setKeyToDelete(null);
+        try {
+            await deleteStandaloneKey(keyToDelete.id);
+            refreshData();
+            setConfirmDeleteOpen(false);
+            setKeyToDelete(null);
+            toast.success('ลบคีย์แล้ว');
+        } catch (err) {
+            toast.error('ลบคีย์ไม่สำเร็จ');
+        }
     };
     
     React.useEffect(() => {

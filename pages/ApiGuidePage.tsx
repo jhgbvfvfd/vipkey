@@ -101,7 +101,10 @@ POST /api/&lt;platform_id&gt;/use
         </EndpointCard>
 
         <p className="text-xs text-slate-500 text-center">
-            การตอบกลับที่สำเร็จทั้งหมดจะเป็นอ็อบเจกต์ JSON ที่มี <code>{'{"ok": true, ...}'}</code> ส่วนการตอบกลับที่ผิดพลาดจะมี <code>{'{"ok": false, "error": "ERROR_CODE", "message": "..."}'}</code>
+            การตอบกลับที่สำเร็จทั้งหมดจะเป็นอ็อบเจกต์ JSON ที่มี{' '}
+            <code>{"{ \"ok\": true, ... }"}</code>{' '}
+            ส่วนการตอบกลับที่ผิดพลาดจะมี{' '}
+            <code>{"{ \"ok\": false, \"error\": \"ERROR_CODE\", \"message\": \"...\" }"}</code>
         </p>
     </div>
   );

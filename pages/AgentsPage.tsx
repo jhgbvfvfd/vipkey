@@ -10,6 +10,7 @@ import Modal from '../components/ui/Modal';
 import Input from '../components/ui/Input';
 import PageHeader from '../components/ui/PageHeader';
 import { UserGroupIcon } from '@heroicons/react/24/outline';
+import { toast } from 'react-hot-toast';
 
 const AgentCard: React.FC<{ 
     agent: Agent; 
@@ -90,6 +91,7 @@ const ManageKeysModal: React.FC<{
             keysForPlatform[keyIndex] = { ...keysForPlatform[keyIndex], status: keyToUpdate.status === 'active' ? 'inactive' : 'active' };
             updatedAgent.keys[platformId] = keysForPlatform;
             await onUpdateAgent(updatedAgent);
+            toast.success(keyToUpdate.status === 'active' ? 'ระงับคีย์แล้ว' : 'เปิดใช้งานคีย์แล้ว');
         }
     };
 
@@ -109,6 +111,7 @@ const ManageKeysModal: React.FC<{
         
         await onUpdateAgent(updatedAgent);
         setKeyToConfirmDelete(null);
+        toast.success('ลบคีย์แล้ว');
     };
 
     return (
@@ -209,9 +212,11 @@ const AgentsPage: React.FC = () => {
             refreshData();
             setAddAgentModalOpen(false);
             setNewAgentData({ username: '', password: '', credits: 1000 });
+            toast.success('สร้างตัวแทนเรียบร้อย');
         } catch (err) {
             setError('ไม่สามารถเพิ่มตัวแทนได้');
             console.error(err);
+            toast.error('ไม่สามารถเพิ่มตัวแทนได้');
         }
     };
     
@@ -235,21 +240,25 @@ const AgentsPage: React.FC = () => {
         e.preventDefault();
         if (!selectedAgent || creditsToAdd <= 0) return;
 
-        const updatedAgent = JSON.parse(JSON.stringify(selectedAgent));
-        const newBalance = updatedAgent.credits + creditsToAdd;
-        updatedAgent.credits = newBalance;
+        try {
+            const updatedAgent = JSON.parse(JSON.stringify(selectedAgent));
+            const newBalance = updatedAgent.credits + creditsToAdd;
+            updatedAgent.credits = newBalance;
 
-        const newHistoryEntry: CreditHistoryEntry = {
-            date: new Date().toISOString(),
-            action: `เติมเครดิตโดยแอดมิน`,
-            amount: creditsToAdd,
-            balanceAfter: newBalance,
-        };
-        updatedAgent.creditHistory = [...(updatedAgent.creditHistory || []), newHistoryEntry];
-        
-        await handleUpdateAgent(updatedAgent);
-        
-        setAddCreditsModalOpen(false);
+            const newHistoryEntry: CreditHistoryEntry = {
+                date: new Date().toISOString(),
+                action: `เติมเครดิตโดยแอดมิน`,
+                amount: creditsToAdd,
+                balanceAfter: newBalance,
+            };
+            updatedAgent.creditHistory = [...(updatedAgent.creditHistory || []), newHistoryEntry];
+
+            await handleUpdateAgent(updatedAgent);
+            setAddCreditsModalOpen(false);
+            toast.success('เติมเครดิตสำเร็จ');
+        } catch (err) {
+            toast.error('เติมเครดิตไม่สำเร็จ');
+        }
     };
 
     const handleUpdateAgent = async (agent: Agent) => {
