@@ -24,7 +24,7 @@ const handler: Handler = async (event) => {
     };
   }
 
-  // search key within agent-owned keys
+  // search key within all agent-owned keys
   const agentsRes = await fetch(`${FIREBASE_URL}agents.json`);
   if (!agentsRes.ok) {
     return { statusCode: 500, body: JSON.stringify({ ok: false, error: 'FETCH_AGENTS_FAILED' }) };
@@ -34,29 +34,29 @@ const handler: Handler = async (event) => {
   let foundKey: ApiKey | null = null;
 
   if (agentsData) {
-    for (const [agentId, agent] of Object.entries(agentsData)) {
-      const keys = agent.keys?.[platformId];
-      if (keys) {
+    outer: for (const [agentId, agent] of Object.entries(agentsData)) {
+      const platformKeys = Object.values(agent.keys || {});
+      for (const keys of platformKeys) {
         const match = keys.find((k) => k.key === keyParam);
         if (match) {
           foundAgentId = agentId;
           foundKey = match;
-          break;
+          break outer;
         }
       }
     }
   }
 
-  // if not found under agents, search standalone keys
+  // if not found under agents, search standalone keys (ignoring platform)
   if (!foundKey) {
     const standaloneRes = await fetch(`${FIREBASE_URL}standalone_keys.json`);
     if (!standaloneRes.ok) {
       return { statusCode: 500, body: JSON.stringify({ ok: false, error: 'FETCH_KEYS_FAILED' }) };
     }
-    const standaloneData: Record<string, ApiKey & { platformId: string }> | null = await standaloneRes.json();
+    const standaloneData: Record<string, ApiKey & { platformId?: string }> | null = await standaloneRes.json();
     if (standaloneData) {
       for (const key of Object.values(standaloneData)) {
-        if (key.key === keyParam && key.platformId === platformId) {
+        if (key.key === keyParam) {
           foundKey = key;
           foundAgentId = 'standalone';
           break;
