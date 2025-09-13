@@ -1,12 +1,19 @@
 
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useData, useAuth, useSettings } from '../App';
 import { Agent, ApiKey } from '../types';
 import { updateAgent } from '../services/firebaseService';
 import Button from '../components/ui/Button';
 import Card, { CardHeader, CardTitle } from '../components/ui/Card';
 import Modal from '../components/ui/Modal';
+import {
+    ClipboardIcon,
+    CheckIcon,
+    PauseIcon,
+    PlayIcon,
+    TrashIcon,
+} from '@heroicons/react/24/outline';
 
 const KeyRow: React.FC<{ 
     apiKey: ApiKey & { platformId: string, platformTitle: string };
@@ -14,18 +21,6 @@ const KeyRow: React.FC<{
     onDelete: (key: ApiKey, platformId: string) => void;
 }> = ({ apiKey, onUpdateStatus, onDelete }) => {
     const [copied, setCopied] = useState(false);
-    const [isMenuOpen, setIsMenuOpen] = useState(false);
-    const ref = useRef<HTMLTableCellElement>(null);
-
-     useEffect(() => {
-        const handleClickOutside = (event: MouseEvent) => {
-            if (ref.current && !ref.current.contains(event.target as Node)) {
-                setIsMenuOpen(false);
-            }
-        };
-        document.addEventListener("mousedown", handleClickOutside);
-        return () => document.removeEventListener("mousedown", handleClickOutside);
-    }, [ref]);
 
     const handleCopy = () => {
         navigator.clipboard.writeText(apiKey.key);
@@ -35,12 +30,10 @@ const KeyRow: React.FC<{
 
     const handleToggleStatus = () => {
         onUpdateStatus(apiKey, apiKey.platformId);
-        setIsMenuOpen(false);
     };
 
     const handleDelete = () => {
         onDelete(apiKey, apiKey.platformId);
-        setIsMenuOpen(false);
     };
 
     return (
@@ -61,26 +54,37 @@ const KeyRow: React.FC<{
                 </span>
             </td>
             <td className="p-1 text-slate-600">{new Date(apiKey.createdAt).toLocaleDateString('th-TH')}</td>
-            <td className="p-1 text-right" ref={ref}>
-                 <Button variant="secondary" size="sm" onClick={handleCopy} disabled={copied} className="w-24 inline-flex">
-                    {copied ? 'คัดลอกแล้ว' : 'คัดลอก'}
-                </Button>
-                <div className="relative inline-block ml-2">
-                    <button onClick={() => setIsMenuOpen(p => !p)} className="p-2 rounded-md hover:bg-slate-200 text-slate-500 hover:text-slate-700 align-middle">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" /></svg>
+            <td className="p-1 text-right">
+                <div className="inline-flex items-center gap-1">
+                    <button
+                        onClick={handleCopy}
+                        className="p-1.5 rounded-md hover:bg-slate-200 text-slate-500 hover:text-slate-700"
+                        title={copied ? 'คัดลอกแล้ว' : 'คัดลอก'}
+                    >
+                        {copied ? (
+                            <CheckIcon className="w-4 h-4 text-green-600" />
+                        ) : (
+                            <ClipboardIcon className="w-4 h-4" />
+                        )}
                     </button>
-                     {isMenuOpen && (
-                        <div className="absolute right-0 bottom-full mb-2 w-40 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-10 origin-bottom-right text-left">
-                            <div className="py-1">
-                                <button onClick={handleToggleStatus} className="flex items-center gap-3 w-full px-4 py-2 text-sm text-slate-700 hover:bg-slate-100">
-                                    {apiKey.status === 'active' ? 'ระงับ' : 'เปิดใช้งาน'}
-                                </button>
-                                <button onClick={handleDelete} className="flex items-center gap-3 w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50">
-                                    ลบ
-                                </button>
-                            </div>
-                        </div>
-                    )}
+                    <button
+                        onClick={handleToggleStatus}
+                        className="p-1.5 rounded-md hover:bg-slate-200 text-slate-500 hover:text-slate-700"
+                        title={apiKey.status === 'active' ? 'ระงับ' : 'เปิดใช้งาน'}
+                    >
+                        {apiKey.status === 'active' ? (
+                            <PauseIcon className="w-4 h-4" />
+                        ) : (
+                            <PlayIcon className="w-4 h-4" />
+                        )}
+                    </button>
+                    <button
+                        onClick={handleDelete}
+                        className="p-1.5 rounded-md hover:bg-red-100 text-red-600 hover:text-red-700"
+                        title="ลบ"
+                    >
+                        <TrashIcon className="w-4 h-4" />
+                    </button>
                 </div>
             </td>
         </tr>
