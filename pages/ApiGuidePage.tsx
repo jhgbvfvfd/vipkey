@@ -1,17 +1,18 @@
 import React from 'react';
 import Card, { CardHeader, CardTitle, CardContent } from '../components/ui/Card';
 import Button from '../components/ui/Button';
-import { toast } from 'react-hot-toast';
 import PageHeader from '../components/ui/PageHeader';
 import { BookOpenIcon } from '@heroicons/react/24/outline';
+import { useSettings } from '../App';
 
 const CodeBlock: React.FC<{ children: string; language?: string }> = ({ children, language = 'bash' }) => {
+    const { notify, t } = useSettings();
     const handleCopy = async () => {
         try {
             await navigator.clipboard.writeText(children.trim());
-            toast.success('คัดลอกแล้ว');
+            notify(t('copySuccess'));
         } catch (err) {
-            toast.error('คัดลอกไม่สำเร็จ');
+            notify(t('copyFailed'), 'error');
         }
     };
 
@@ -26,7 +27,7 @@ const CodeBlock: React.FC<{ children: string; language?: string }> = ({ children
                 onClick={handleCopy}
                 className="absolute top-2 right-2"
             >
-                คัดลอก
+                {t('copy')}
             </Button>
         </div>
     );
@@ -47,13 +48,14 @@ const EndpointCard: React.FC<{ step: number; title: string; children: React.Reac
 );
 
 const ApiGuidePage: React.FC = () => {
+  const { t } = useSettings();
   return (
     <div className="max-w-screen-md mx-auto space-y-6">
         <div>
             <PageHeader
               icon={<BookOpenIcon className="w-5 h-5" />}
-              title="คู่มือ API"
-              description="คำแนะนำสำหรับนักพัฒนาในการใช้งาน API"
+              title={t('apiGuideTitle')}
+              description={t('apiGuideDesc')}
             />
         </div>
 

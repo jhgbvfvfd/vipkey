@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useData } from '../App';
+import { useData, useSettings } from '../App';
 import { Platform, StandaloneKey } from '../types';
 import { addStandaloneKey, updateStandaloneKey, deleteStandaloneKey } from '../services/firebaseService';
 import { generateKey } from '../utils/keyGenerator';
@@ -9,7 +9,6 @@ import Modal from '../components/ui/Modal';
 import Input from '../components/ui/Input';
 import PageHeader from '../components/ui/PageHeader';
 import { KeyIcon } from '@heroicons/react/24/outline';
-import { toast } from 'react-hot-toast';
 
 const KeyRow: React.FC<{ 
     apiKey: StandaloneKey;
@@ -82,6 +81,7 @@ const KeyRow: React.FC<{
 
 const GenerateKeyPage: React.FC = () => {
     const { platforms, standaloneKeys, loading, refreshData } = useData();
+    const { notify, t } = useSettings();
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isConfirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
     const [keyToDelete, setKeyToDelete] = useState<StandaloneKey | null>(null);
@@ -118,11 +118,11 @@ const GenerateKeyPage: React.FC = () => {
             refreshData();
             setGeneratedKey(newKeyString);
             setIsModalOpen(true);
-            toast.success('สร้างคีย์เรียบร้อย');
+            notify('สร้างคีย์เรียบร้อย');
         } catch (err) {
             setError('ไม่สามารถสร้างคีย์ได้');
             console.error(err);
-            toast.error('ไม่สามารถสร้างคีย์ได้');
+            notify('ไม่สามารถสร้างคีย์ได้', 'error');
         }
     };
 
@@ -130,7 +130,7 @@ const GenerateKeyPage: React.FC = () => {
         const updatedKey = { ...key, status };
         await updateStandaloneKey(updatedKey);
         refreshData();
-        toast.success(status === 'active' ? 'เปิดใช้งานคีย์แล้ว' : 'ระงับคีย์แล้ว');
+        notify(status === 'active' ? 'เปิดใช้งานคีย์แล้ว' : 'ระงับคีย์แล้ว');
     };
 
     const confirmDeleteKey = (key: StandaloneKey) => {
@@ -145,9 +145,9 @@ const GenerateKeyPage: React.FC = () => {
             refreshData();
             setConfirmDeleteOpen(false);
             setKeyToDelete(null);
-            toast.success('ลบคีย์แล้ว');
+            notify('ลบคีย์แล้ว');
         } catch (err) {
-            toast.error('ลบคีย์ไม่สำเร็จ');
+            notify('ลบคีย์ไม่สำเร็จ', 'error');
         }
     };
     
@@ -162,8 +162,8 @@ const GenerateKeyPage: React.FC = () => {
             <div>
                 <PageHeader
                   icon={<KeyIcon className="w-5 h-5" />}
-                  title="สร้างคีย์ทั่วไป"
-                  description="สร้างและจัดการคีย์แบบใช้ครั้งเดียวสำหรับแพลตฟอร์มต่างๆ"
+                  title={t('generateKeyTitle')}
+                  description={t('generateKeyDesc')}
                 />
             </div>
 

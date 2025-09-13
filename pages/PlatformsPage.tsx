@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useData } from '../App';
+import { useData, useSettings } from '../App';
 import { addPlatform, updatePlatform, deletePlatform } from '../services/firebaseService';
 import { Platform } from '../types';
 import Button from '../components/ui/Button';
@@ -10,7 +10,6 @@ import ToggleSwitch from '../components/ui/ToggleSwitch';
 import PageHeader from '../components/ui/PageHeader';
 import { Squares2X2Icon } from '@heroicons/react/24/outline';
 import { DropdownMenu, DropdownMenuItem } from '../components/ui/Dropdown';
-import { toast } from 'react-hot-toast';
 
 
 const PlatformCard: React.FC<{ platform: Platform; onToggleApi: (platform: Platform) => void; onDelete: (platform: Platform) => void; }> = ({ platform, onToggleApi, onDelete }) => {
@@ -53,6 +52,7 @@ const PlatformCard: React.FC<{ platform: Platform; onToggleApi: (platform: Platf
 
 const PlatformsPage: React.FC = () => {
     const { platforms, loading, refreshData } = useData();
+    const { notify, t } = useSettings();
     const [isAddModalOpen, setAddModalOpen] = useState(false);
     const [isConfirmDeleteModalOpen, setConfirmDeleteModalOpen] = useState(false);
     const [platformToProcess, setPlatformToProcess] = useState<Platform | null>(null);
@@ -106,7 +106,7 @@ const PlatformsPage: React.FC = () => {
         const updatedPlatform = { ...platform, apiEnabled: platform.apiEnabled === false };
         await updatePlatform(updatedPlatform);
         refreshData();
-        toast.success(updatedPlatform.apiEnabled ? 'เปิดใช้งาน API แล้ว' : 'ปิดใช้งาน API แล้ว');
+        notify(updatedPlatform.apiEnabled ? 'เปิดใช้งาน API แล้ว' : 'ปิดใช้งาน API แล้ว');
     };
 
     const confirmDelete = (platform: Platform) => {
@@ -128,8 +128,8 @@ const PlatformsPage: React.FC = () => {
             <div>
                 <PageHeader
                   icon={<Squares2X2Icon className="w-5 h-5" />}
-                  title="จัดการแพลตฟอร์ม"
-                  description="เพิ่ม, แก้ไข, และลบแพลตฟอร์มสำหรับสร้างคีย์"
+                  title={t('platformsTitle')}
+                  description={t('platformsDesc')}
                 />
             </div>
             <Button onClick={() => setAddModalOpen(true)}>+ เพิ่มแพลตฟอร์ม</Button>

@@ -1,7 +1,7 @@
 
 
 import React, { useState } from 'react';
-import { useData } from '../App';
+import { useData, useSettings } from '../App';
 import { Agent, Platform, CreditHistoryEntry, ApiKey } from '../types';
 import { addAgent, updateAgent, deleteAgent } from '../services/firebaseService';
 import Button from '../components/ui/Button';
@@ -10,7 +10,6 @@ import Modal from '../components/ui/Modal';
 import Input from '../components/ui/Input';
 import PageHeader from '../components/ui/PageHeader';
 import { UserGroupIcon } from '@heroicons/react/24/outline';
-import { toast } from 'react-hot-toast';
 import { DropdownMenu, DropdownMenuItem } from '../components/ui/Dropdown';
 import { MagnifyingGlassIcon } from '@heroicons/react/24/outline';
 
@@ -91,12 +90,13 @@ const AgentCard: React.FC<{
 
 
 const ManageKeysModal: React.FC<{
-    agent: Agent | null; 
+    agent: Agent | null;
     platforms: Platform[];
-    isOpen: boolean; 
+    isOpen: boolean;
     onClose: () => void;
     onUpdateAgent: (agent: Agent) => Promise<void>;
 }> = ({ agent, platforms, isOpen, onClose, onUpdateAgent }) => {
+    const { notify } = useSettings();
     const [keyToConfirmDelete, setKeyToConfirmDelete] = useState<{key: ApiKey, platformId: string} | null>(null);
     if (!agent) return null;
 
@@ -113,7 +113,7 @@ const ManageKeysModal: React.FC<{
             keysForPlatform[keyIndex] = { ...keysForPlatform[keyIndex], status: keyToUpdate.status === 'active' ? 'inactive' : 'active' };
             updatedAgent.keys[platformId] = keysForPlatform;
             await onUpdateAgent(updatedAgent);
-            toast.success(keyToUpdate.status === 'active' ? 'ระงับคีย์แล้ว' : 'เปิดใช้งานคีย์แล้ว');
+            notify(keyToUpdate.status === 'active' ? 'ระงับคีย์แล้ว' : 'เปิดใช้งานคีย์แล้ว');
         }
     };
 
@@ -133,7 +133,7 @@ const ManageKeysModal: React.FC<{
         
         await onUpdateAgent(updatedAgent);
         setKeyToConfirmDelete(null);
-        toast.success('ลบคีย์แล้ว');
+        notify('ลบคีย์แล้ว');
     };
 
     return (
@@ -190,6 +190,7 @@ const ManageKeysModal: React.FC<{
 
 const AgentsPage: React.FC = () => {
     const { agents, platforms, loading, refreshData } = useData();
+    const { notify, t } = useSettings();
     const [isAddAgentModalOpen, setAddAgentModalOpen] = useState(false);
     const [isHistoryModalOpen, setHistoryModalOpen] = useState(false);
     const [isKeysModalOpen, setKeysModalOpen] = useState(false);
@@ -236,11 +237,11 @@ const AgentsPage: React.FC = () => {
             refreshData();
             setAddAgentModalOpen(false);
             setNewAgentData({ username: '', password: '', credits: 1000 });
-            toast.success('สร้างตัวแทนเรียบร้อย');
+            notify('สร้างตัวแทนเรียบร้อย');
         } catch (err) {
             setError('ไม่สามารถเพิ่มตัวแทนได้');
             console.error(err);
-            toast.error('ไม่สามารถเพิ่มตัวแทนได้');
+            notify('ไม่สามารถเพิ่มตัวแทนได้', 'error');
         }
     };
     
@@ -279,9 +280,9 @@ const AgentsPage: React.FC = () => {
 
             await handleUpdateAgent(updatedAgent);
             setAddCreditsModalOpen(false);
-            toast.success('เติมเครดิตสำเร็จ');
+            notify('เติมเครดิตสำเร็จ');
         } catch (err) {
-            toast.error('เติมเครดิตไม่สำเร็จ');
+            notify('เติมเครดิตไม่สำเร็จ', 'error');
         }
     };
 
@@ -298,20 +299,20 @@ const AgentsPage: React.FC = () => {
         const updatedAgent = { ...agent, status: agent.status === 'suspended' ? 'active' : 'suspended' };
         await updateAgent(updatedAgent);
         refreshData();
-        toast.success(updatedAgent.status === 'suspended' ? 'ระงับตัวแทนแล้ว' : 'เปิดใช้งานตัวแทนแล้ว');
+        notify(updatedAgent.status === 'suspended' ? 'ระงับตัวแทนแล้ว' : 'เปิดใช้งานตัวแทนแล้ว');
     };
 
     const handleBanAgent = async (agent: Agent) => {
         const updatedAgent = { ...agent, status: agent.status === 'banned' ? 'active' : 'banned' };
         await updateAgent(updatedAgent);
         refreshData();
-        toast.success(updatedAgent.status === 'banned' ? 'แบนตัวแทนแล้ว' : 'ปลดแบนตัวแทนแล้ว');
+        notify(updatedAgent.status === 'banned' ? 'แบนตัวแทนแล้ว' : 'ปลดแบนตัวแทนแล้ว');
     };
 
     const handleDeleteAgent = async (agent: Agent) => {
         await deleteAgent(agent.id);
         refreshData();
-        toast.success('ลบตัวแทนแล้ว');
+        notify('ลบตัวแทนแล้ว');
     };
 
     const handleDeactivateKeys = async (agent: Agent) => {
@@ -322,7 +323,7 @@ const AgentsPage: React.FC = () => {
         const updatedAgent = { ...agent, keys: updatedKeys };
         await updateAgent(updatedAgent);
         refreshData();
-        toast.success('หยุดการทำงานของคีย์ทั้งหมดแล้ว');
+        notify('หยุดการทำงานของคีย์ทั้งหมดแล้ว');
     };
 
     return (
@@ -331,8 +332,8 @@ const AgentsPage: React.FC = () => {
                 <div className="flex-1">
                     <PageHeader
                       icon={<UserGroupIcon className="w-5 h-5" />}
-                      title="จัดการตัวแทน"
-                      description="เพิ่มและดูข้อมูลตัวแทนในระบบ"
+                      title={t('agentsTitle')}
+                      description={t('agentsDesc')}
                     />
                 </div>
                 <div className="flex items-center gap-2">

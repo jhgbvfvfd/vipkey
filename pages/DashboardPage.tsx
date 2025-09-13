@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { useData } from '../App';
+import { useData, useSettings } from '../App';
 import Card, { CardHeader, CardTitle, CardContent } from '../components/ui/Card';
 import PageHeader from '../components/ui/PageHeader';
 import { Agent, Platform } from '../types';
@@ -40,6 +40,7 @@ const RecentItem: React.FC<{ title: string; subtitle: string; linkTo: string }> 
 
 const DashboardPage: React.FC = () => {
     const { agents, platforms, bots, loading } = useData();
+    const { t } = useSettings();
     
     const recentAgents = [...agents].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).slice(0, 5);
     const recentPlatforms = [...platforms].sort((a, b) => b.id.localeCompare(a.id)).slice(0, 5);
@@ -53,8 +54,8 @@ const DashboardPage: React.FC = () => {
     <div className="space-y-6">
       <PageHeader
         icon={<HomeIcon className="w-5 h-5" />}
-        title="ภาพรวมแดชบอร์ด"
-        description="ดูภาพรวมข้อมูลทั้งหมดในระบบของคุณ"
+        title={t('dashboardTitle')}
+        description={t('dashboardDesc')}
       />
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">

@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { useAuth, useData } from '../App';
+import { useAuth, useData, useSettings } from '../App';
 import { addBot } from '../services/firebaseService';
 import { Bot } from '../types';
 import Button from '../components/ui/Button';
@@ -13,6 +13,7 @@ import { CpuChipIcon } from '@heroicons/react/24/outline';
 const BotsPage: React.FC = () => {
     const { bots, loading, refreshData } = useData();
     const { user } = useAuth();
+    const { t } = useSettings();
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [newBot, setNewBot] = useState({ name: '', url: '' });
     const [error, setError] = useState('');
@@ -57,8 +58,8 @@ const BotsPage: React.FC = () => {
                 <div>
                     <PageHeader
                       icon={<CpuChipIcon className="w-5 h-5" />}
-                      title="ไดเรกทอรีบอท"
-                      description="จัดการรายชื่อบอทในระบบของคุณ"
+                      title={t('botsTitle')}
+                      description={t('botsDesc')}
                     />
                 </div>
                 {!isAgent && <Button onClick={() => setIsModalOpen(true)}>+ เพิ่มบอท</Button>}

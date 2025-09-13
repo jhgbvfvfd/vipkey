@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { useAuth } from '../../App';
+import { useAuth, useSettings } from '../../App';
 import { Agent } from '../../types';
 import Logo from '../ui/Logo';
 import {
@@ -15,14 +15,6 @@ const NavIcon: React.FC<{ children: React.ReactNode }> = ({ children }) => (
     <div className="w-6 h-6">{children}</div>
 );
 
-const navLinks = [
-  { to: '/', text: 'แดชบอร์ด', icon: <HomeIcon className="w-6 h-6" /> },
-  { to: '/my-keys', text: 'คีย์ของฉัน', icon: <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M8.25 6.75h7.5M8.25 12h7.5m-7.5 5.25h7.5M3.75 6.75h.007v.008H3.75V6.75zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zM3.75 12h.007v.008H3.75V12zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm-.375 5.25h.007v.008H3.75v-.008zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" /></svg> },
-  { to: '/bots', text: 'ไดเรกทอรีบอท', icon: <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 00-2.456 2.456zM16.898 20.562L16.25 22.5l-.648-1.938a3.375 3.375 0 00-2.684-2.684l-1.938-.648 1.938-.648a3.375 3.375 0 002.684-2.684l.648-1.938.648 1.938a3.375 3.375 0 002.684 2.684l1.938.648-1.938.648a3.375 3.375 0 00-2.684 2.684z" /></svg> },
-  { to: '/profile', text: 'โปรไฟล์', icon: <UserIcon className="w-6 h-6" /> },
-  { to: '/usage', text: 'การใช้งาน', icon: <ChartPieIcon className="w-6 h-6" /> },
-  { to: '/change-password', text: 'เปลี่ยนรหัส', icon: <LockClosedIcon className="w-6 h-6" /> },
-];
 
 interface SidebarProps {
     isOpen: boolean;
@@ -31,8 +23,18 @@ interface SidebarProps {
 
 const AgentSidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
     const { logout, user } = useAuth();
+    const { t } = useSettings();
     const navigate = useNavigate();
     const agent = user?.data as Agent;
+
+    const navLinks = [
+      { to: '/', text: t('dashboard'), icon: <HomeIcon className="w-6 h-6" /> },
+      { to: '/my-keys', text: t('myKeys'), icon: <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M8.25 6.75h7.5M8.25 12h7.5m-7.5 5.25h7.5M3.75 6.75h.007v.008H3.75V6.75zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zM3.75 12h.007v.008H3.75V12zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm-.375 5.25h.007v.008H3.75v-.008zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" /></svg> },
+      { to: '/bots', text: t('bots'), icon: <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 00-2.456 2.456zM16.898 20.562L16.25 22.5l-.648-1.938a3.375 3.375 0 00-2.684-2.684l-1.938-.648 1.938-.648a3.375 3.375 0 002.684-2.684l.648-1.938.648 1.938a3.375 3.375 0 002.684 2.684l1.938.648-1.938.648a3.375 3.375 0 00-2.684 2.684z" /></svg> },
+      { to: '/profile', text: t('profile'), icon: <UserIcon className="w-6 h-6" /> },
+      { to: '/usage', text: t('usage'), icon: <ChartPieIcon className="w-6 h-6" /> },
+      { to: '/change-password', text: t('changePassword'), icon: <LockClosedIcon className="w-6 h-6" /> },
+    ];
 
     const handleLogout = () => {
         logout();
@@ -91,7 +93,7 @@ const AgentSidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
 
         <button onClick={handleLogout} className="flex items-center p-3 w-full text-left rounded-lg text-slate-600 hover:bg-red-500 hover:text-white transition-colors duration-200 font-medium">
           <NavIcon><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75" /></svg></NavIcon>
-          <span className="ml-3">ออกจากระบบ</span>
+          <span className="ml-3">{t('logout')}</span>
         </button>
       </aside>
     </>

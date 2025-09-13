@@ -1,7 +1,7 @@
 
 
 import React, { useState, useRef, useEffect } from 'react';
-import { useData, useAuth } from '../App';
+import { useData, useAuth, useSettings } from '../App';
 import { Agent, ApiKey } from '../types';
 import { updateAgent } from '../services/firebaseService';
 import Button from '../components/ui/Button';
@@ -93,6 +93,7 @@ const KeyRow: React.FC<{
 const AgentKeysPage: React.FC = () => {
     const { platforms, loading: dataLoading, refreshData } = useData();
     const { user, login } = useAuth();
+    const { t } = useSettings();
     const agent = user?.data as Agent;
 
     const [isConfirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
@@ -157,8 +158,8 @@ const AgentKeysPage: React.FC = () => {
             <div>
                 <PageHeader
                   icon={<KeyIcon className="w-5 h-5" />}
-                  title="คีย์ของฉัน"
-                  description="จัดการคีย์ทั้งหมดที่คุณได้สร้างไว้"
+                  title={t('myKeysTitle')}
+                  description={t('myKeysDesc')}
                 />
             </div>
              <Card className="max-w-md mx-auto">

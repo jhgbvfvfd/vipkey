@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useAuth } from '../App';
+import { useAuth, useSettings } from '../App';
 import Input from '../components/ui/Input';
 import Button from '../components/ui/Button';
 import Card, { CardHeader, CardTitle, CardContent } from '../components/ui/Card';
@@ -7,10 +7,10 @@ import PageHeader from '../components/ui/PageHeader';
 import { LockClosedIcon } from '@heroicons/react/24/outline';
 import { updateAgent } from '../services/firebaseService';
 import { Agent } from '../types';
-import { toast } from 'react-hot-toast';
 
 const ChangePasswordPage: React.FC = () => {
   const { user, login } = useAuth();
+  const { notify, t } = useSettings();
   const agent = user?.role === 'agent' ? (user.data as Agent) : null;
 
   const [current, setCurrent] = useState('');
@@ -21,26 +21,26 @@ const ChangePasswordPage: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (newPassword !== confirm) {
-      toast.error('รหัสผ่านใหม่ไม่ตรงกัน');
+      notify('รหัสผ่านใหม่ไม่ตรงกัน', 'error');
       return;
     }
     setLoading(true);
     if (user?.role === 'admin') {
       const storedAdminPassword = localStorage.getItem('adminPassword') || 'admin';
       if (current !== storedAdminPassword) {
-        toast.error('รหัสผ่านปัจจุบันไม่ถูกต้อง');
+        notify('รหัสผ่านปัจจุบันไม่ถูกต้อง', 'error');
       } else {
         localStorage.setItem('adminPassword', newPassword);
-        toast.success('เปลี่ยนรหัสผ่านแล้ว');
+        notify('เปลี่ยนรหัสผ่านแล้ว');
       }
     } else if (agent) {
       if (current !== agent.password) {
-        toast.error('รหัสผ่านปัจจุบันไม่ถูกต้อง');
+        notify('รหัสผ่านปัจจุบันไม่ถูกต้อง', 'error');
       } else {
         const updatedAgent = { ...agent, password: newPassword };
         await updateAgent(updatedAgent);
         await login(agent.username, newPassword);
-        toast.success('เปลี่ยนรหัสผ่านแล้ว');
+        notify('เปลี่ยนรหัสผ่านแล้ว');
       }
     }
     setLoading(false);
@@ -53,8 +53,8 @@ const ChangePasswordPage: React.FC = () => {
     <div className="space-y-6">
       <PageHeader
         icon={<LockClosedIcon className="w-5 h-5" />}
-        title="เปลี่ยนรหัสผ่าน"
-        description="อัปเดตรหัสผ่านบัญชีของคุณ"
+        title={t('changePasswordTitle')}
+        description={t('changePasswordDesc')}
       />
       <Card className="max-w-md mx-auto">
         <CardHeader>

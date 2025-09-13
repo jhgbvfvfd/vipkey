@@ -1,6 +1,7 @@
 
 import React, { useState, useCallback, useMemo, createContext, useContext, useEffect } from 'react';
-import { Toaster } from 'react-hot-toast';
+import { Toaster, toast } from 'react-hot-toast';
+import { translations, Language } from './utils/i18n';
 import { HashRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import LoginPage from './pages/LoginPage';
 import Layout from './components/layout/Layout';
@@ -61,6 +62,65 @@ export const useData = () => {
     }
     return context;
 }
+
+interface Settings {
+  notifications: boolean;
+  darkMode: boolean;
+  language: Language;
+}
+
+const defaultSettings: Settings = {
+  notifications: true,
+  darkMode: false,
+  language: 'th',
+};
+
+interface SettingsContextType {
+  settings: Settings;
+  updateSettings: (s: Settings) => void;
+  notify: (msg: string, type?: 'success' | 'error') => void;
+  t: (key: keyof typeof translations['en']) => string;
+}
+
+const SettingsContext = createContext<SettingsContextType | null>(null);
+
+export const useSettings = () => {
+  const ctx = useContext(SettingsContext);
+  if (!ctx) {
+    throw new Error('useSettings must be used within SettingsProvider');
+  }
+  return ctx;
+};
+
+const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [settings, setSettings] = useState<Settings>(() => {
+    const saved = localStorage.getItem('settings');
+    return saved ? JSON.parse(saved) : defaultSettings;
+  });
+
+  useEffect(() => {
+    document.documentElement.classList.toggle('dark', settings.darkMode);
+    document.documentElement.setAttribute('lang', settings.language);
+    localStorage.setItem('settings', JSON.stringify(settings));
+  }, [settings]);
+
+  const updateSettings = (s: Settings) => setSettings(s);
+
+  const notify = useCallback((message: string, type: 'success' | 'error' = 'success') => {
+    if (!settings.notifications) return;
+    type === 'success' ? toast.success(message) : toast.error(message);
+  }, [settings.notifications]);
+
+  const t = useCallback((key: keyof typeof translations['en']) => {
+    return translations[settings.language][key] || key;
+  }, [settings.language]);
+
+  return (
+    <SettingsContext.Provider value={{ settings, updateSettings, notify, t }}>
+      {children}
+    </SettingsContext.Provider>
+  );
+};
 
 const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [agents, setAgents] = useState<Agent[]>([]);
@@ -159,22 +219,15 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
 
 
 const App: React.FC = () => {
-  useEffect(() => {
-    const saved = localStorage.getItem('settings');
-    if (saved) {
-      const parsed = JSON.parse(saved);
-      document.documentElement.classList.toggle('dark', parsed.darkMode);
-      document.documentElement.setAttribute('lang', parsed.language);
-    }
-  }, []);
-
   return (
-    <AuthProvider>
+    <SettingsProvider>
+      <AuthProvider>
         <DataProvider>
-            <AppRoutes />
-            <Toaster position="top-right" />
+          <AppRoutes />
+          <Toaster position="top-right" />
         </DataProvider>
-    </AuthProvider>
+      </AuthProvider>
+    </SettingsProvider>
   );
 };
 

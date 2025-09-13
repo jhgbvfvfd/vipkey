@@ -2,7 +2,7 @@ import React from 'react';
 import PageHeader from '../components/ui/PageHeader';
 import { ChartPieIcon } from '@heroicons/react/24/outline';
 import Card, { CardHeader, CardTitle, CardContent } from '../components/ui/Card';
-import { useAuth, useData } from '../App';
+import { useAuth, useData, useSettings } from '../App';
 import { Agent } from '../types';
 import { Line } from 'react-chartjs-2';
 import {
@@ -20,6 +20,7 @@ ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Tooltip,
 const AgentUsagePage: React.FC = () => {
   const { user } = useAuth();
   const { platforms } = useData();
+  const { t } = useSettings();
   const agent = user?.data as Agent;
 
   const keysByPlatform = agent.keys || {};
@@ -53,7 +54,7 @@ const AgentUsagePage: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <PageHeader icon={<ChartPieIcon className="w-5 h-5" />} title="การใช้งาน" description="สรุปการใช้งานของคุณ" />
+      <PageHeader icon={<ChartPieIcon className="w-5 h-5" />} title={t('usageTitle')} description={t('usageDesc')} />
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>

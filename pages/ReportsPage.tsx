@@ -2,10 +2,11 @@ import React from 'react';
 import PageHeader from '../components/ui/PageHeader';
 import { ChartBarIcon } from '@heroicons/react/24/outline';
 import Card, { CardHeader, CardTitle, CardContent } from '../components/ui/Card';
-import { useData } from '../App';
+import { useData, useSettings } from '../App';
 
 const ReportsPage: React.FC = () => {
   const { agents } = useData();
+  const { t } = useSettings();
 
   const allKeys = agents.flatMap(a => Object.values(a.keys || {}).flat());
   const totalTokens = allKeys.reduce((sum, k) => sum + k.tokens_remaining, 0);
@@ -20,7 +21,7 @@ const ReportsPage: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <PageHeader icon={<ChartBarIcon className="w-5 h-5" />} title="รายงาน" description="สรุปรายงานการใช้งานระบบ" />
+      <PageHeader icon={<ChartBarIcon className="w-5 h-5" />} title={t('reportsTitle')} description={t('reportsDesc')} />
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>

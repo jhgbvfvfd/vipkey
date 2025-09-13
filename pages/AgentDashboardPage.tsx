@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { useData, useAuth } from '../App';
+import { useData, useAuth, useSettings } from '../App';
 import { Agent, ApiKey, CreditHistoryEntry } from '../types';
 import { updateAgent } from '../services/firebaseService';
 import { generateKey } from '../utils/keyGenerator';
@@ -26,6 +26,7 @@ ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Tooltip,
 const AgentDashboardPage: React.FC = () => {
     const { platforms, refreshData } = useData();
     const { user, login } = useAuth(); // We need login to refresh user data in context
+    const { t } = useSettings();
     const agent = user?.data as Agent;
     const keysByPlatform = agent.keys || {};
     const allKeys = Object.values(keysByPlatform).flat();
@@ -116,8 +117,8 @@ const AgentDashboardPage: React.FC = () => {
         <div className="space-y-6">
             <PageHeader
               icon={<HomeIcon className="w-5 h-5" />}
-              title="แดชบอร์ด"
-              description={`ยินดีต้อนรับ, ${agent.username}! ดูภาพรวมและจัดการคีย์ของคุณ`}
+              title={t('dashboardTitle')}
+              description={t('dashboardDesc')}
             />
 
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">

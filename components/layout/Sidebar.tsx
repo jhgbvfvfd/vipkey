@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { useAuth } from '../../App';
+import { useAuth, useSettings } from '../../App';
 import Logo from '../ui/Logo';
 import {
   Squares2X2Icon,
@@ -20,17 +20,6 @@ const NavIcon: React.FC<{ icon: React.ComponentType<React.SVGProps<SVGSVGElement
   <Icon className="w-6 h-6" />
 );
 
-const navLinks = [
-  { to: '/', text: 'แดชบอร์ด', icon: Squares2X2Icon },
-  { to: '/platforms', text: 'แพลตฟอร์ม', icon: RectangleStackIcon },
-  { to: '/agents', text: 'ตัวแทน', icon: UserGroupIcon },
-  { to: '/generate-key', text: 'สร้างคีย์', icon: KeyIcon },
-  { to: '/bots', text: 'ไดเรกทอรีบอท', icon: CpuChipIcon },
-  { to: '/api-guide', text: 'คู่มือ API', icon: BookOpenIcon },
-  { to: '/reports', text: 'รายงาน', icon: ChartBarIcon },
-  { to: '/settings', text: 'การตั้งค่า', icon: Cog6ToothIcon },
-  { to: '/change-password', text: 'เปลี่ยนรหัส', icon: LockClosedIcon },
-];
 
 interface SidebarProps {
     isOpen: boolean;
@@ -39,6 +28,19 @@ interface SidebarProps {
 
 const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
     const { logout } = useAuth();
+    const { t } = useSettings();
+
+    const navLinks = [
+      { to: '/', text: t('dashboard'), icon: Squares2X2Icon },
+      { to: '/platforms', text: t('platforms'), icon: RectangleStackIcon },
+      { to: '/agents', text: t('agents'), icon: UserGroupIcon },
+      { to: '/generate-key', text: t('generateKey'), icon: KeyIcon },
+      { to: '/bots', text: t('bots'), icon: CpuChipIcon },
+      { to: '/api-guide', text: t('apiGuide'), icon: BookOpenIcon },
+      { to: '/reports', text: t('reports'), icon: ChartBarIcon },
+      { to: '/settings', text: t('settings'), icon: Cog6ToothIcon },
+      { to: '/change-password', text: t('changePassword'), icon: LockClosedIcon },
+    ];
     const navigate = useNavigate();
 
     const handleLogout = () => {
@@ -101,7 +103,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
           className="flex items-center p-3 w-full text-left rounded-lg text-slate-600 hover:bg-red-500 hover:text-white transition-colors duration-200 font-medium"
         >
           <NavIcon icon={ArrowRightOnRectangleIcon} />
-          <span className="ml-3">ออกจากระบบ</span>
+          <span className="ml-3">{t('logout')}</span>
         </button>
       </aside>
     </>
