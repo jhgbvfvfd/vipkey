@@ -26,7 +26,7 @@ const ApiGuidePage: React.FC = () => {
                 </p>
 
                 <p className="mb-4">
-                    การตอบกลับที่สำเร็จทั้งหมดจะเป็นอ็อบเจกต์ JSON ที่มี `{"ok": true, ...}` ส่วนการตอบกลับที่ผิดพลาดจะมี `{"ok": false, "error": "ERROR_CODE", "message": "..."}`
+                    การตอบกลับที่สำเร็จทั้งหมดจะเป็นอ็อบเจกต์ JSON ที่มี <code>{'{"ok": true, ...}'}</code> ส่วนการตอบกลับที่ผิดพลาดจะมี <code>{'{"ok": false, "error": "ERROR_CODE", "message": "..."}'}</code>
                 </p>
 
                 <div className="space-y-8">
