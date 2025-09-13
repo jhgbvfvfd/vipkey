@@ -1,5 +1,6 @@
 
 import React, { useState, useCallback, useMemo, createContext, useContext, useEffect } from 'react';
+import { Toaster } from 'react-hot-toast';
 import { HashRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import LoginPage from './pages/LoginPage';
 import Layout from './components/layout/Layout';
@@ -156,6 +157,7 @@ const App: React.FC = () => {
     <AuthProvider>
         <DataProvider>
             <AppRoutes />
+            <Toaster position="top-right" />
         </DataProvider>
     </AuthProvider>
   );

@@ -4,21 +4,37 @@ import Button from '../components/ui/Button';
 import Input from '../components/ui/Input';
 import Card, { CardHeader, CardTitle, CardContent } from '../components/ui/Card';
 import Logo from '../components/ui/Logo';
+import { UserIcon, LockClosedIcon } from '@heroicons/react/24/outline';
+import { toast } from 'react-hot-toast';
 
 const LoginPage: React.FC = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [remember, setRemember] = useState(false);
   const { login } = useAuth();
+
+  React.useEffect(() => {
+    const remembered = localStorage.getItem('rememberUser');
+    if (remembered) {
+      setUsername(remembered);
+      setRemember(true);
+    }
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setError('');
     const success = await login(username, password);
-    if (!success) {
-      setError('ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง');
+    if (success) {
+      toast.success('เข้าสู่ระบบสำเร็จ');
+      if (remember) {
+        localStorage.setItem('rememberUser', username);
+      } else {
+        localStorage.removeItem('rememberUser');
+      }
+    } else {
+      toast.error('ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง');
     }
     setLoading(false);
   };
@@ -46,6 +62,7 @@ const LoginPage: React.FC = () => {
               placeholder="กรอกชื่อผู้ใช้ของคุณ"
               required
               disabled={loading}
+              leftIcon={<UserIcon className="w-5 h-5" />}
             />
             <Input
               id="password"
@@ -56,8 +73,22 @@ const LoginPage: React.FC = () => {
               placeholder="••••••••"
               required
               disabled={loading}
+              leftIcon={<LockClosedIcon className="w-5 h-5" />}
             />
-            {error && <p className="text-red-500 text-sm text-center">{error}</p>}
+            <div className="flex items-center justify-between text-sm">
+              <label className="flex items-center">
+                <input
+                  type="checkbox"
+                  className="mr-2 rounded border-slate-300"
+                  checked={remember}
+                  onChange={(e) => setRemember(e.target.checked)}
+                />
+                จำฉันไว้
+              </label>
+              <a href="#" className="text-blue-600 hover:underline">
+                ลืมรหัสผ่าน?
+              </a>
+            </div>
             <Button type="submit" className="w-full !py-2.5 mt-2" disabled={loading}>
               {loading ? 'กำลังตรวจสอบ...' : 'เข้าสู่ระบบ'}
             </Button>
