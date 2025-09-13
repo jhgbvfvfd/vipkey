@@ -11,6 +11,9 @@ import {
   BookOpenIcon,
   ArrowRightOnRectangleIcon,
   XMarkIcon,
+  ChartBarIcon,
+  Cog6ToothIcon,
+  LockClosedIcon,
 } from '@heroicons/react/24/outline';
 
 const NavIcon: React.FC<{ icon: React.ComponentType<React.SVGProps<SVGSVGElement>> }> = ({ icon: Icon }) => (
@@ -24,6 +27,9 @@ const navLinks = [
   { to: '/generate-key', text: 'สร้างคีย์', icon: KeyIcon },
   { to: '/bots', text: 'ไดเรกทอรีบอท', icon: CpuChipIcon },
   { to: '/api-guide', text: 'คู่มือ API', icon: BookOpenIcon },
+  { to: '/reports', text: 'รายงาน', icon: ChartBarIcon },
+  { to: '/settings', text: 'การตั้งค่า', icon: Cog6ToothIcon },
+  { to: '/change-password', text: 'เปลี่ยนรหัส', icon: LockClosedIcon },
 ];
 
 interface SidebarProps {

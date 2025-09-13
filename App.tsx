@@ -12,6 +12,11 @@ import ApiGuidePage from './pages/ApiGuidePage';
 import GenerateKeyPage from './pages/GenerateKeyPage';
 import AgentDashboardPage from './pages/AgentDashboardPage';
 import AgentKeysPage from './pages/AgentKeysPage';
+import ChangePasswordPage from './pages/ChangePasswordPage';
+import ReportsPage from './pages/ReportsPage';
+import SettingsPage from './pages/SettingsPage';
+import AgentProfilePage from './pages/AgentProfilePage';
+import AgentUsagePage from './pages/AgentUsagePage';
 import { Agent, Platform, Bot, StandaloneKey } from './types';
 import { getPlatforms, getAgents, getBots, getStandaloneKeys } from './services/firebaseService';
 
@@ -108,7 +113,8 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
 
     const login = useCallback(async (username: string, password?: string): Promise<boolean> => {
         // Admin Login
-        if (username === 'admin' && password === 'admin') {
+        const storedAdminPassword = localStorage.getItem('adminPassword') || 'admin';
+        if (username === 'admin' && password === storedAdminPassword) {
             const adminUser: User = { role: 'admin', data: { username: 'admin' } };
             sessionStorage.setItem('user', JSON.stringify(adminUser));
             setUser(adminUser);
@@ -118,7 +124,7 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
         // Agent Login
         try {
             const agents = await getAgents();
-            const foundAgent = agents.find(agent => agent.username === username && agent.password === password);
+            const foundAgent = agents.find(agent => agent.username === username && agent.password === password && agent.status !== 'banned');
             if (foundAgent) {
                 const agentUser: User = { role: 'agent', data: foundAgent };
                 sessionStorage.setItem('user', JSON.stringify(agentUser));
@@ -196,6 +202,9 @@ const AdminRoutes: React.FC = () => (
         <Route path="/generate-key" element={<GenerateKeyPage />} />
         <Route path="/bots" element={<BotsPage />} />
         <Route path="/api-guide" element={<ApiGuidePage />} />
+        <Route path="/reports" element={<ReportsPage />} />
+        <Route path="/settings" element={<SettingsPage />} />
+        <Route path="/change-password" element={<ChangePasswordPage />} />
         <Route path="*" element={<Navigate to="/" />} />
     </Routes>
 );
@@ -205,6 +214,9 @@ const AgentRoutes: React.FC = () => (
         <Route path="/" element={<AgentDashboardPage />} />
         <Route path="/my-keys" element={<AgentKeysPage />} />
         <Route path="/bots" element={<BotsPage />} />
+        <Route path="/profile" element={<AgentProfilePage />} />
+        <Route path="/usage" element={<AgentUsagePage />} />
+        <Route path="/change-password" element={<ChangePasswordPage />} />
         <Route path="*" element={<Navigate to="/" />} />
     </Routes>
 );

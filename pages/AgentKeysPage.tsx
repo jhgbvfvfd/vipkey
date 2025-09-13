@@ -72,7 +72,7 @@ const KeyRow: React.FC<{
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" /></svg>
                     </button>
                      {isMenuOpen && (
-                        <div className="absolute right-0 mt-2 w-40 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-10 origin-top-right text-left">
+                        <div className="absolute right-0 bottom-full mb-2 w-40 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-10 origin-bottom-right text-left">
                             <div className="py-1">
                                 <button onClick={handleToggleStatus} className="flex items-center gap-3 w-full px-4 py-2 text-sm text-slate-700 hover:bg-slate-100">
                                     {apiKey.status === 'active' ? 'ระงับ' : 'เปิดใช้งาน'}
@@ -161,7 +161,7 @@ const AgentKeysPage: React.FC = () => {
                   description="จัดการคีย์ทั้งหมดที่คุณได้สร้างไว้"
                 />
             </div>
-             <Card>
+             <Card className="max-w-md mx-auto">
                 <CardHeader><CardTitle>รายการคีย์ทั้งหมด</CardTitle></CardHeader>
                 <div className="overflow-x-auto">
                     <table className="w-full text-left text-sm">

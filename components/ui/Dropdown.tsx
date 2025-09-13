@@ -25,7 +25,7 @@ export const DropdownMenu: React.FC<{ children: React.ReactNode }> = ({ children
         </svg>
       </button>
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-20 origin-top-right">
+        <div className="absolute right-0 bottom-full mb-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-20 origin-bottom-right">
           <div className="py-1" onClick={() => setIsOpen(false)}>
             {children}
           </div>

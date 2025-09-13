@@ -21,6 +21,7 @@ const AgentCard: React.FC<{
     onAddCredits: (agent: Agent) => void;
     onSuspend: (agent: Agent) => void;
     onDelete: (agent: Agent) => void;
+    onBan: (agent: Agent) => void;
     onDeactivateKeys: (agent: Agent) => void;
     platforms: Platform[]
 }> = ({ agent, onViewHistory, onManageKeys, onAddCredits, onSuspend, onDelete, onDeactivateKeys, platforms }) => {
@@ -41,6 +42,9 @@ const AgentCard: React.FC<{
                     <DropdownMenu>
                         <DropdownMenuItem onClick={() => onSuspend(agent)}>
                             {agent.status === 'suspended' ? 'เปิดใช้งาน' : 'ระงับ'}
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => onBan(agent)}>
+                            {agent.status === 'banned' ? 'ปลดแบน' : 'แบน'}
                         </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => onDeactivateKeys(agent)}>
                             หยุดการทำงาน
@@ -297,6 +301,13 @@ const AgentsPage: React.FC = () => {
         toast.success(updatedAgent.status === 'suspended' ? 'ระงับตัวแทนแล้ว' : 'เปิดใช้งานตัวแทนแล้ว');
     };
 
+    const handleBanAgent = async (agent: Agent) => {
+        const updatedAgent = { ...agent, status: agent.status === 'banned' ? 'active' : 'banned' };
+        await updateAgent(updatedAgent);
+        refreshData();
+        toast.success(updatedAgent.status === 'banned' ? 'แบนตัวแทนแล้ว' : 'ปลดแบนตัวแทนแล้ว');
+    };
+
     const handleDeleteAgent = async (agent: Agent) => {
         await deleteAgent(agent.id);
         refreshData();
@@ -345,6 +356,7 @@ const AgentsPage: React.FC = () => {
                             onManageKeys={handleOpenKeys}
                             onAddCredits={handleOpenAddCredits}
                             onSuspend={handleSuspendAgent}
+                            onBan={handleBanAgent}
                             onDelete={handleDeleteAgent}
                             onDeactivateKeys={handleDeactivateKeys}
                             platforms={platforms}
