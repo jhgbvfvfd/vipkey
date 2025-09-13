@@ -70,18 +70,18 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
   return (
     <>
-        <div className="flex h-screen bg-slate-100 text-slate-800">
+        <div className="flex h-screen bg-slate-100 text-slate-800 dark:bg-slate-900 dark:text-slate-100">
         {user?.role === 'admin' ? 
             <AdminSidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} /> :
             <AgentSidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
         }
         <div className="flex-1 flex flex-col overflow-x-hidden">
-            <header className="p-1.5 border-b border-slate-200 bg-white flex items-center">
+            <header className="p-1.5 border-b border-slate-200 bg-white dark:bg-slate-800 dark:border-slate-700 flex items-center">
                 <HamburgerIcon onClick={() => setIsSidebarOpen(true)} />
 
                 {agent && (
                     <div 
-                        className="flex items-center gap-2 p-2 rounded-lg cursor-pointer hover:bg-slate-100 transition-colors ml-auto"
+                        className="flex items-center gap-2 p-2 rounded-lg cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors ml-auto"
                         onClick={() => setHistoryModalOpen(true)}
                         >
                         <div className="text-yellow-500">

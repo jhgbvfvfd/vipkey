@@ -31,11 +31,13 @@ const SettingsPage: React.FC = () => {
     }
   }, []);
 
+  const updateSettings = (newSettings: Settings) => {
+    setSettings(newSettings);
+    localStorage.setItem('settings', JSON.stringify(newSettings));
+  };
+
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
-    localStorage.setItem('settings', JSON.stringify(settings));
-    document.documentElement.classList.toggle('dark', settings.darkMode);
-    document.documentElement.setAttribute('lang', settings.language);
     toast.success('บันทึกการตั้งค่าแล้ว');
   };
 
@@ -55,7 +57,11 @@ const SettingsPage: React.FC = () => {
               <select
                 id="language"
                 value={settings.language}
-                onChange={(e) => setSettings({ ...settings, language: e.target.value })}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  updateSettings({ ...settings, language: value });
+                  document.documentElement.setAttribute('lang', value);
+                }}
                 className="w-full border-slate-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
               >
                 <option value="th">ไทย</option>
@@ -66,14 +72,17 @@ const SettingsPage: React.FC = () => {
               <span className="text-sm text-slate-700">เปิดการแจ้งเตือน</span>
               <ToggleSwitch
                 checked={settings.notifications}
-                onChange={(checked) => setSettings({ ...settings, notifications: checked })}
+                onChange={(checked) => updateSettings({ ...settings, notifications: checked })}
               />
             </div>
             <div className="flex items-center justify-between">
               <span className="text-sm text-slate-700">โหมดมืด</span>
               <ToggleSwitch
                 checked={settings.darkMode}
-                onChange={(checked) => setSettings({ ...settings, darkMode: checked })}
+                onChange={(checked) => {
+                  updateSettings({ ...settings, darkMode: checked });
+                  document.documentElement.classList.toggle('dark', checked);
+                }}
               />
             </div>
             <Button type="submit" className="w-full">

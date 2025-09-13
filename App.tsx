@@ -159,6 +159,15 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
 
 
 const App: React.FC = () => {
+  useEffect(() => {
+    const saved = localStorage.getItem('settings');
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      document.documentElement.classList.toggle('dark', parsed.darkMode);
+      document.documentElement.setAttribute('lang', parsed.language);
+    }
+  }, []);
+
   return (
     <AuthProvider>
         <DataProvider>
