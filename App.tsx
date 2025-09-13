@@ -99,8 +99,19 @@ const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ children })
   });
 
   useEffect(() => {
-    document.documentElement.classList.toggle('dark', settings.darkMode);
+    const root = document.documentElement;
+    if (settings.darkMode) {
+      root.classList.add('dark');
+    } else {
+      root.classList.remove('dark');
+    }
+  }, [settings.darkMode]);
+
+  useEffect(() => {
     document.documentElement.setAttribute('lang', settings.language);
+  }, [settings.language]);
+
+  useEffect(() => {
     localStorage.setItem('settings', JSON.stringify(settings));
   }, [settings]);
 
