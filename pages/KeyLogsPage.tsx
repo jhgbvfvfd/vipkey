@@ -1,5 +1,4 @@
 import React from 'react';
-import PageHeader from '../components/ui/PageHeader';
 import { useData, useAuth, useSettings } from '../App';
 import { Agent } from '../types';
 import { ServerIcon } from '@heroicons/react/24/outline';
@@ -15,9 +14,8 @@ const KeyLogsPage: React.FC = () => {
 
   return (
     <div className="p-4">
-      <PageHeader title={t('logsTitle')} desc={t('logsDesc')} />
       {filteredLogs.length === 0 ? (
-        <div className="mt-20 flex flex-col items-center text-slate-500 gap-2">
+        <div className="flex flex-col items-center justify-center py-20 text-slate-500 gap-2">
           <ServerIcon className="w-12 h-12 opacity-50" />
           <p>{t('noLogs')}</p>
         </div>
