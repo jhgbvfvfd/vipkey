@@ -21,11 +21,18 @@ const KeyRow: React.FC<{
     onDelete: (key: StandaloneKey) => void;
 }> = ({ apiKey, onUpdateStatus, onDelete }) => {
     const [copied, setCopied] = useState(false);
+    const { notify, t } = useSettings();
 
-    const handleCopy = () => {
-        navigator.clipboard.writeText(apiKey.key);
-        setCopied(true);
-        setTimeout(() => setCopied(false), 2000);
+    const handleCopy = async () => {
+        try {
+            await navigator.clipboard.writeText(apiKey.key);
+            setCopied(true);
+            notify(t('copySuccess'));
+        } catch (err) {
+            notify(t('copyFailed'), 'error');
+        } finally {
+            setTimeout(() => setCopied(false), 2000);
+        }
     };
 
     const handleToggleStatus = () => {
@@ -164,6 +171,15 @@ const GenerateKeyPage: React.FC = () => {
             notify('ลบคีย์ไม่สำเร็จ', 'error');
         }
     };
+
+    const handleModalCopy = async () => {
+        try {
+            await navigator.clipboard.writeText(generatedKey);
+            notify(t('copySuccess'));
+        } catch (err) {
+            notify(t('copyFailed'), 'error');
+        }
+    };
     
     React.useEffect(() => {
         if (platforms.length > 0 && !keyGenData.platformId) {
@@ -233,7 +249,7 @@ const GenerateKeyPage: React.FC = () => {
                         {generatedKey}
                     </div>
                      <div className="flex justify-end mt-6">
-                        <Button onClick={() => navigator.clipboard.writeText(generatedKey)}>คัดลอกไปยังคลิปบอร์ด</Button>
+                        <Button onClick={handleModalCopy}>คัดลอกไปยังคลิปบอร์ด</Button>
                     </div>
                 </div>
             </Modal>

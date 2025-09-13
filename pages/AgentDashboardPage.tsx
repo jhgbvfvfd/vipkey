@@ -24,7 +24,7 @@ ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Tooltip,
 const AgentDashboardPage: React.FC = () => {
     const { platforms, refreshData } = useData();
     const { user, login } = useAuth(); // We need login to refresh user data in context
-    const { t } = useSettings();
+    const { notify, t } = useSettings();
     const agent = user?.data as Agent;
     const keysByPlatform = agent.keys || {};
     const allKeys = Object.values(keysByPlatform).flat();
@@ -111,6 +111,15 @@ const AgentDashboardPage: React.FC = () => {
         }
     };
 
+    const handleCopy = async () => {
+        try {
+            await navigator.clipboard.writeText(generatedKey);
+            notify(t('copySuccess'));
+        } catch (err) {
+            notify(t('copyFailed'), 'error');
+        }
+    };
+
     return (
         <div className="space-y-6">
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -181,7 +190,7 @@ const AgentDashboardPage: React.FC = () => {
                     </div>
                     <div className="flex justify-between items-center mt-6">
                         <Button variant="secondary" onClick={() => setKeyModalOpen(false)}>ปิด</Button>
-                        <Button onClick={() => navigator.clipboard.writeText(generatedKey)}>คัดลอกคีย์</Button>
+                        <Button onClick={handleCopy}>คัดลอกคีย์</Button>
                     </div>
                 </div>
             </Modal>

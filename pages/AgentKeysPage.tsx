@@ -21,11 +21,18 @@ const KeyRow: React.FC<{
     onDelete: (key: ApiKey, platformId: string) => void;
 }> = ({ apiKey, onUpdateStatus, onDelete }) => {
     const [copied, setCopied] = useState(false);
+    const { notify, t } = useSettings();
 
-    const handleCopy = () => {
-        navigator.clipboard.writeText(apiKey.key);
-        setCopied(true);
-        setTimeout(() => setCopied(false), 2000);
+    const handleCopy = async () => {
+        try {
+            await navigator.clipboard.writeText(apiKey.key);
+            setCopied(true);
+            notify(t('copySuccess'));
+        } catch (err) {
+            notify(t('copyFailed'), 'error');
+        } finally {
+            setTimeout(() => setCopied(false), 2000);
+        }
     };
 
     const handleToggleStatus = () => {
