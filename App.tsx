@@ -31,7 +31,7 @@ interface User {
 interface AuthContextType {
   isAuthenticated: boolean;
   user: User | null;
-  login: (username: string, password?: string) => Promise<boolean>;
+  login: (username: string, password?: string) => Promise<'success' | 'banned' | 'invalid'>;
   logout: () => void;
 }
 
@@ -188,31 +188,34 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
         return storedUser ? JSON.parse(storedUser) : null;
     });
 
-    const login = useCallback(async (username: string, password?: string): Promise<boolean> => {
+    const login = useCallback(async (username: string, password?: string): Promise<'success' | 'banned' | 'invalid'> => {
         // Admin Login
         const storedAdminPassword = localStorage.getItem('adminPassword') || 'admin';
         if (username === 'admin' && password === storedAdminPassword) {
             const adminUser: User = { role: 'admin', data: { username: 'admin' } };
             sessionStorage.setItem('user', JSON.stringify(adminUser));
             setUser(adminUser);
-            return true;
+            return 'success';
         }
 
         // Agent Login
         try {
             const agents = await getAgents();
-            const foundAgent = agents.find(agent => agent.username === username && agent.password === password && agent.status !== 'banned');
+            const foundAgent = agents.find(agent => agent.username === username && agent.password === password);
             if (foundAgent) {
+                if (foundAgent.status === 'banned') {
+                    return 'banned';
+                }
                 const agentUser: User = { role: 'agent', data: foundAgent };
                 sessionStorage.setItem('user', JSON.stringify(agentUser));
                 setUser(agentUser);
-                return true;
+                return 'success';
             }
         } catch (error) {
             console.error("Error fetching agents for login:", error);
         }
 
-        return false;
+        return 'invalid';
     }, []);
 
     const logout = useCallback(() => {

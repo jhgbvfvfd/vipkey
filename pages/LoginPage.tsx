@@ -26,14 +26,16 @@ const LoginPage: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    const success = await login(username, password);
-    if (success) {
+    const result = await login(username, password);
+    if (result === 'success') {
       notify(t('loginSuccess'));
       if (remember) {
         localStorage.setItem('rememberUser', username);
       } else {
         localStorage.removeItem('rememberUser');
       }
+    } else if (result === 'banned') {
+      notify(t('bannedUser'), 'error');
     } else {
       notify(t('loginFailed'), 'error');
     }
