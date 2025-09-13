@@ -27,6 +27,7 @@ const SettingsPage: React.FC = () => {
       const parsed: Settings = JSON.parse(saved);
       setSettings(parsed);
       document.documentElement.classList.toggle('dark', parsed.darkMode);
+      document.documentElement.setAttribute('lang', parsed.language);
     }
   }, []);
 
@@ -34,6 +35,7 @@ const SettingsPage: React.FC = () => {
     e.preventDefault();
     localStorage.setItem('settings', JSON.stringify(settings));
     document.documentElement.classList.toggle('dark', settings.darkMode);
+    document.documentElement.setAttribute('lang', settings.language);
     toast.success('บันทึกการตั้งค่าแล้ว');
   };
 
