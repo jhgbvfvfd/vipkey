@@ -13,8 +13,10 @@ interface AgentRecord {
 }
 
 const handler: Handler = async (event) => {
-  const platformId = event.queryStringParameters?.platform;
+  const pathParts = event.path.split('/');
+  const platformId = pathParts[pathParts.length - 1];
   const keyParam = event.queryStringParameters?.key;
+
   if (!platformId || !keyParam) {
     return {
       statusCode: 400,

@@ -3,6 +3,6 @@
 
 [[redirects]]
   from = "/api/:platform/credit"
-  to = "/.netlify/functions/credit?platform=:platform"
+  to = "/.netlify/functions/credit/:platform"
   status = 200
   force = true
