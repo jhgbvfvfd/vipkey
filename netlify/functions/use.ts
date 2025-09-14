@@ -29,6 +29,10 @@ const handler: Handler = async (event) => {
   }
 
   const { key: keyParam, tokens } = body;
+  const ip =
+    event.headers['x-nf-client-connection-ip'] ||
+    event.headers['x-forwarded-for'] ||
+    'unknown';
 
   if (!platformId || !keyParam || typeof tokens !== 'number') {
     return {
@@ -111,6 +115,19 @@ const handler: Handler = async (event) => {
     };
   }
 
+  if (foundAgentId) {
+    const banRes = await fetch(`${FIREBASE_URL}ip_bans/${foundAgentId}.json`);
+    if (banRes.ok) {
+      const banData: Record<string, { ip: string }> | null = await banRes.json();
+      if (banData && Object.values(banData).some((b) => b.ip === ip)) {
+        return {
+          statusCode: 403,
+          body: JSON.stringify({ ok: false, error: 'IP_BANNED', message: 'This IP is banned.' }),
+        };
+      }
+    }
+  }
+
   if (foundKey.status !== 'active') {
     return {
       statusCode: 403,
@@ -156,7 +173,6 @@ const handler: Handler = async (event) => {
     }
   }
 
-  const ip = event.headers['x-nf-client-connection-ip'] || event.headers['x-forwarded-for'] || 'unknown';
   await fetch(`${FIREBASE_URL}key_logs.json`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
