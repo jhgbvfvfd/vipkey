@@ -84,6 +84,13 @@ const handler: Handler = async (event) => {
     };
   }
 
+  if (foundKey.status !== 'active') {
+    return {
+      statusCode: 403,
+      body: JSON.stringify({ ok: false, error: 'KEY_SUSPENDED', message: 'This key has been suspended.' }),
+    };
+  }
+
   const ip = event.headers['x-nf-client-connection-ip'] || event.headers['x-forwarded-for'] || 'unknown';
   await fetch(`${FIREBASE_URL}key_logs.json`, {
     method: 'POST',

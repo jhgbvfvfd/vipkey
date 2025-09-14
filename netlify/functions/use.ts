@@ -99,6 +99,13 @@ const handler: Handler = async (event) => {
     };
   }
 
+  if (foundKey.status !== 'active') {
+    return {
+      statusCode: 403,
+      body: JSON.stringify({ ok: false, error: 'KEY_SUSPENDED', message: 'This key has been suspended.' }),
+    };
+  }
+
   if (foundKey.tokens_remaining < tokens) {
     return {
       statusCode: 400,
