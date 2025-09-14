@@ -25,6 +25,18 @@ const handler: Handler = async (event) => {
     };
   }
 
+  // verify platform is enabled
+  const platformRes = await fetch(`${FIREBASE_URL}platforms/${platformId}.json`);
+  if (platformRes.ok) {
+    const platformData: { apiEnabled?: boolean } | null = await platformRes.json();
+    if (platformData && platformData.apiEnabled === false) {
+      return {
+        statusCode: 403,
+        body: JSON.stringify({ ok: false, error: 'PLATFORM_DISABLED', message: 'This platform is disabled.' }),
+      };
+    }
+  }
+
   let foundAgentId: string | null = null;
   let foundKey: ApiKey | null = null;
 
