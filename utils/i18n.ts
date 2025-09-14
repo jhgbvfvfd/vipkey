@@ -83,6 +83,8 @@ export const translations = {
     unlockIpBan: 'ปลดล็อก IP',
     lockIpBan: 'ปิดเมนู IP',
     noAgents: 'ยังไม่มีตัวแทน',
+    recentIps: 'ไอพีล่าสุด',
+    noRecentIps: 'ยังไม่มีไอพีล่าสุด',
     logout: 'ออกจากระบบ'
   },
   en: {
@@ -169,6 +171,8 @@ export const translations = {
     unlockIpBan: 'Unlock IP',
     lockIpBan: 'Disable IP menu',
     noAgents: 'No agents found',
+    recentIps: 'Recent IPs',
+    noRecentIps: 'No recent IPs',
     logout: 'Logout'
   }
 };
