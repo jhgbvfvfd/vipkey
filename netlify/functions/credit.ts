@@ -39,7 +39,7 @@ const handler: Handler = async (event) => {
     }
   }
 
-  // search key within all agent-owned keys
+  // search key within agent-owned keys for this platform only
   if (!foundKey) {
     const agentsRes = await fetch(`${FIREBASE_URL}agents.json`);
     if (!agentsRes.ok) {
@@ -48,20 +48,18 @@ const handler: Handler = async (event) => {
     const agentsData: Record<string, AgentRecord> | null = await agentsRes.json();
     if (agentsData) {
       outer: for (const [agentId, agent] of Object.entries(agentsData)) {
-        const platformKeys = Object.values(agent.keys || {});
-        for (const keys of platformKeys) {
-          const match = keys.find((k) => k.key === keyParam);
-          if (match) {
-            foundAgentId = agentId;
-            foundKey = match;
-            break outer;
-          }
+        const keys = agent.keys?.[platformId] || [];
+        const match = keys.find((k) => k.key === keyParam);
+        if (match) {
+          foundAgentId = agentId;
+          foundKey = match;
+          break outer;
         }
       }
     }
   }
 
-  // if not found under agents, search standalone keys (ignoring platform)
+  // if not found under agents, search standalone keys for this platform
   if (!foundKey) {
     const standaloneRes = await fetch(`${FIREBASE_URL}standalone_keys.json`);
     if (!standaloneRes.ok) {
@@ -70,7 +68,7 @@ const handler: Handler = async (event) => {
     const standaloneData: Record<string, ApiKey & { platformId?: string }> | null = await standaloneRes.json();
     if (standaloneData) {
       for (const key of Object.values(standaloneData)) {
-        if (key.key === keyParam) {
+        if (key.key === keyParam && key.platformId === platformId) {
           foundKey = key;
           foundAgentId = 'standalone';
           break;
