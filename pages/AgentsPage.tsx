@@ -17,8 +17,10 @@ const AgentCard: React.FC<{
     onAddCredits: (agent: Agent) => void;
     onDelete: (agent: Agent) => void;
     onBan: (agent: Agent) => void;
+    onToggleIpBan: (agent: Agent) => void;
     platforms: Platform[]
-}> = ({ agent, onViewHistory, onManageKeys, onAddCredits, onDelete, onBan, platforms }) => {
+}> = ({ agent, onViewHistory, onManageKeys, onAddCredits, onDelete, onBan, onToggleIpBan, platforms }) => {
+    const { t } = useSettings();
     const platformMap = new Map(platforms.map(p => [p.id, p]));
 
     return (
@@ -34,6 +36,9 @@ const AgentCard: React.FC<{
                         <p className="text-xs text-slate-500">เครดิตคงเหลือ</p>
                     </div>
                     <div className="flex flex-col gap-1">
+                        <Button size="sm" variant="secondary" onClick={() => onToggleIpBan(agent)}>
+                            {agent.ipBanEnabled ? t('lockIpBan') : t('unlockIpBan')}
+                        </Button>
                         <Button size="sm" variant={agent.status === 'banned' ? 'secondary' : 'danger'} onClick={() => onBan(agent)}>
                             {agent.status === 'banned' ? 'ปลดแบน' : 'แบน'}
                         </Button>
@@ -290,6 +295,12 @@ const AgentsPage: React.FC = () => {
         refreshData();
         notify(updatedAgent.status === 'banned' ? 'แบนตัวแทนแล้ว' : 'ปลดแบนตัวแทนแล้ว');
     };
+    const handleToggleIpBan = async (agent: Agent) => {
+        const updatedAgent = { ...agent, ipBanEnabled: !agent.ipBanEnabled };
+        await updateAgent(updatedAgent);
+        refreshData();
+        notify(updatedAgent.ipBanEnabled ? t('ipBanMenuEnabled') : t('ipBanMenuDisabled'));
+    };
     const handleDeleteAgent = async (agent: Agent) => {
         await deleteAgent(agent.id);
         refreshData();
@@ -321,6 +332,7 @@ const AgentsPage: React.FC = () => {
                             onAddCredits={handleOpenAddCredits}
                             onBan={handleBanAgent}
                             onDelete={handleDeleteAgent}
+                            onToggleIpBan={handleToggleIpBan}
                             platforms={platforms}
                         />
                     ))}
