@@ -1,9 +1,7 @@
 import React from 'react';
 import { useData, useAuth, useSettings } from '../App';
 import { Agent } from '../types';
-import { ServerIcon, NoSymbolIcon } from '@heroicons/react/24/outline';
-import { addIpBan } from '../services/firebaseService';
-import toast from 'react-hot-toast';
+import { ServerIcon } from '@heroicons/react/24/outline';
 
 const KeyLogsPage: React.FC = () => {
   const { keyLogs, agents } = useData();
@@ -13,17 +11,6 @@ const KeyLogsPage: React.FC = () => {
   const filteredLogs = user?.role === 'agent'
     ? keyLogs.filter((log) => log.agentId === (user.data as Agent).id)
     : keyLogs;
-
-  const canBan = user?.role === 'admin' || (user?.role === 'agent' && (user.data as Agent).ipBanEnabled);
-
-  const handleBan = async (ip: string, agentId: string) => {
-    try {
-      await addIpBan(agentId, ip);
-      toast.success(t('ipAdded'));
-    } catch {
-      toast.error(t('ipBanFailed'));
-    }
-  };
 
   return (
     <div className="p-2 sm:p-4">
@@ -44,16 +31,8 @@ const KeyLogsPage: React.FC = () => {
                     {agents.find((a) => a.id === log.agentId)?.username || '-'}
                   </div>
                 )}
-                <div className="text-slate-500 flex items-center justify-between">
+                <div className="text-slate-500">
                   <span>{log.ip}</span>
-                  {canBan && (
-                    <button
-                      onClick={() => handleBan(log.ip, user?.role === 'admin' ? log.agentId : (user!.data as Agent).id)}
-                      className="ml-2 text-red-600"
-                    >
-                      {t('banIp')}
-                    </button>
-                  )}
                 </div>
                 {log.tokensUsed !== undefined && (
                   <div className="text-slate-500">-{log.tokensUsed} tokens</div>
@@ -76,9 +55,6 @@ const KeyLogsPage: React.FC = () => {
                   <th className="p-2 border-b border-slate-200 text-left whitespace-nowrap">{t('ipAddress')}</th>
                   <th className="p-2 border-b border-slate-200 text-left whitespace-nowrap">{t('tokensUsed') || 'Tokens'}</th>
                   <th className="p-2 border-b border-slate-200 text-left whitespace-nowrap">{t('usedAt')}</th>
-                  {canBan && (
-                    <th className="p-2 border-b border-slate-200 text-left whitespace-nowrap">{t('actions')}</th>
-                  )}
                 </tr>
               </thead>
               <tbody>
@@ -97,17 +73,6 @@ const KeyLogsPage: React.FC = () => {
                     <td className="p-2 border-b border-slate-200 whitespace-nowrap">
                       {new Date(log.usedAt).toLocaleString()}
                     </td>
-                    {canBan && (
-                      <td className="p-2 border-b border-slate-200 text-center">
-                        <button
-                          onClick={() => handleBan(log.ip, user?.role === 'admin' ? log.agentId : (user!.data as Agent).id)}
-                          className="text-red-600 hover:text-red-800"
-                          title={t('banIp')}
-                        >
-                          <NoSymbolIcon className="w-5 h-5 mx-auto" />
-                        </button>
-                      </td>
-                    )}
                   </tr>
                 ))}
               </tbody>
