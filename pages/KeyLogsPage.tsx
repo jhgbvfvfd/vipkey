@@ -32,6 +32,9 @@ const KeyLogsPage: React.FC = () => {
                   </div>
                 )}
                 <div className="text-slate-500">{log.ip}</div>
+                {log.tokensUsed !== undefined && (
+                  <div className="text-slate-500">-{log.tokensUsed} tokens</div>
+                )}
                 <div className="text-slate-500">
                   {new Date(log.usedAt).toLocaleString()}
                 </div>
@@ -48,6 +51,7 @@ const KeyLogsPage: React.FC = () => {
                     <th className="p-2 border-b border-slate-200 text-left whitespace-nowrap">{t('agents')}</th>
                   )}
                   <th className="p-2 border-b border-slate-200 text-left whitespace-nowrap">{t('ipAddress')}</th>
+                  <th className="p-2 border-b border-slate-200 text-left whitespace-nowrap">{t('tokensUsed') || 'Tokens'}</th>
                   <th className="p-2 border-b border-slate-200 text-left whitespace-nowrap">{t('usedAt')}</th>
                 </tr>
               </thead>
@@ -61,6 +65,9 @@ const KeyLogsPage: React.FC = () => {
                       </td>
                     )}
                     <td className="p-2 border-b border-slate-200 font-mono whitespace-nowrap">{log.ip}</td>
+                    <td className="p-2 border-b border-slate-200 whitespace-nowrap">
+                      {log.tokensUsed !== undefined ? `-${log.tokensUsed}` : '-'}
+                    </td>
                     <td className="p-2 border-b border-slate-200 whitespace-nowrap">
                       {new Date(log.usedAt).toLocaleString()}
                     </td>

@@ -133,6 +133,29 @@ const handler: Handler = async (event) => {
     body: JSON.stringify({ tokens_remaining: newRemaining }),
   });
 
+  // deduct credits and record credit history for agent-owned keys
+  if (foundAgentId && foundAgentId !== 'standalone') {
+    const agentRes = await fetch(`${FIREBASE_URL}agents/${foundAgentId}.json`);
+    if (agentRes.ok) {
+      const agentData: { credits?: number; creditHistory?: any[] } | null = await agentRes.json();
+      if (agentData) {
+        const newCredits = (agentData.credits || 0) - tokens;
+        const history = agentData.creditHistory || [];
+        history.push({
+          date: new Date().toISOString(),
+          action: 'use',
+          amount: -tokens,
+          balanceAfter: newCredits,
+        });
+        await fetch(`${FIREBASE_URL}agents/${foundAgentId}.json`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ credits: newCredits, creditHistory: history }),
+        });
+      }
+    }
+  }
+
   const ip = event.headers['x-nf-client-connection-ip'] || event.headers['x-forwarded-for'] || 'unknown';
   await fetch(`${FIREBASE_URL}key_logs.json`, {
     method: 'POST',

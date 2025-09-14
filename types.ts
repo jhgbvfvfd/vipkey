@@ -54,4 +54,5 @@ export interface KeyLog {
     agentId: string;
     ip: string;
     usedAt: string;
+    tokensUsed?: number;
 }
