@@ -18,6 +18,7 @@ export const translations = {
     dashboard: 'แดชบอร์ด',
     platforms: 'แพลตฟอร์ม',
     agents: 'ตัวแทน',
+    agentMenus: 'เมนูตัวแทน',
     bots: 'บอท',
     myKeys: 'คีย์ของฉัน',
     myKeysTitle: 'คีย์ของฉัน',
@@ -36,6 +37,8 @@ export const translations = {
     platformsDesc: 'จัดการแพลตฟอร์ม',
     agentsTitle: 'ตัวแทน',
     agentsDesc: 'จัดการตัวแทน',
+    agentMenusTitle: 'เมนูตัวแทน',
+    agentMenusDesc: 'ปลดล็อกความสามารถให้ตัวแทน',
     botsTitle: 'บอท',
     botsDesc: 'จัดการบอท',
     apiGuideTitle: 'คู่มือ API',
@@ -79,6 +82,7 @@ export const translations = {
     ipBanMenuDisabled: 'ปิดเมนูแบนไอพีแล้ว',
     unlockIpBan: 'ปลดล็อก IP',
     lockIpBan: 'ปิดเมนู IP',
+    noAgents: 'ยังไม่มีตัวแทน',
     logout: 'ออกจากระบบ'
   },
   en: {
@@ -100,6 +104,7 @@ export const translations = {
     dashboard: 'Dashboard',
     platforms: 'Platforms',
     agents: 'Agents',
+    agentMenus: 'Agent Menus',
     bots: 'Bots',
     myKeys: 'My Keys',
     myKeysTitle: 'My Keys',
@@ -118,6 +123,8 @@ export const translations = {
     platformsDesc: 'Manage platforms',
     agentsTitle: 'Agents',
     agentsDesc: 'Manage agents',
+    agentMenusTitle: 'Agent Menus',
+    agentMenusDesc: 'Enable capabilities for agents',
     botsTitle: 'Bots',
     botsDesc: 'Manage bots',
     apiGuideTitle: 'API Guide',
@@ -161,6 +168,7 @@ export const translations = {
     ipBanMenuDisabled: 'IP ban menu disabled',
     unlockIpBan: 'Unlock IP',
     lockIpBan: 'Disable IP menu',
+    noAgents: 'No agents found',
     logout: 'Logout'
   }
 };
