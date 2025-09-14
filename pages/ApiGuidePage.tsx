@@ -51,9 +51,7 @@ const ApiGuidePage: React.FC = () => {
     <div className="max-w-screen-md mx-auto space-y-6">
         <EndpointCard step={1} title="ตรวจสอบเครดิตของคีย์">
             <p>ตรวจสอบความถูกต้องของคีย์และจำนวนโทเค็นที่เหลืออยู่</p>
-            <CodeBlock>
-GET /api/&lt;platform_id&gt;/credit?key=YOUR_KEY
-            </CodeBlock>
+            <CodeBlock>{`GET /api/<platform_id>/credit?key=YOUR_KEY`}</CodeBlock>
             <p className="font-semibold mt-2">ตัวอย่างการตอบกลับที่สำเร็จ (200 OK):</p>
             <CodeBlock language="json">{`{
   "ok": true,
@@ -70,9 +68,7 @@ GET /api/&lt;platform_id&gt;/credit?key=YOUR_KEY
 
         <EndpointCard step={2} title="ใช้โทเค็นจากคีย์">
             <p>หักโทเค็นจากคีย์ที่ระบุ การดำเนินการนี้จะลดจำนวน \`tokens_remaining\`</p>
-            <CodeBlock>
-POST /api/&lt;platform_id&gt;/use
-            </CodeBlock>
+            <CodeBlock>{`POST /api/<platform_id>/use`}</CodeBlock>
             <p className="font-semibold mt-2">Body (JSON):</p>
             <CodeBlock language="json">{`{
   "key": "YOUR_KEY",
