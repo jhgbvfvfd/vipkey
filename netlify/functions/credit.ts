@@ -126,9 +126,11 @@ const handler: Handler = async (event) => {
     body: JSON.stringify({ key: keyParam, agentId: foundAgentId, ip, usedAt: new Date().toISOString() }),
   });
 
+  const status = foundKey.tokens_remaining <= 0 ? 'no_tokens' : foundKey.status;
+
   return {
     statusCode: 200,
-    body: JSON.stringify({ ok: true, tokens_remaining: foundKey.tokens_remaining, status: foundKey.status }),
+    body: JSON.stringify({ ok: true, tokens_remaining: foundKey.tokens_remaining, status }),
   };
 };
 

@@ -85,7 +85,7 @@ const ManageKeysModal: React.FC<{
     onClose: () => void;
     onUpdateAgent: (agent: Agent) => Promise<void>;
 }> = ({ agent, platforms, isOpen, onClose, onUpdateAgent }) => {
-    const { notify } = useSettings();
+    const { notify, t } = useSettings();
     const [keyToConfirmDelete, setKeyToConfirmDelete] = useState<{key: ApiKey, platformId: string} | null>(null);
     if (!agent) return null;
 
@@ -143,7 +143,7 @@ const ManageKeysModal: React.FC<{
                                 <tr key={k.key} className="border-b border-slate-200 last:border-b-0">
                                     <td className="p-1 font-mono text-xs text-blue-600">{k.key}</td>
                                     <td className="p-1">{k.platformTitle}</td>
-                                    <td className="p-1">{k.status === 'active' ? 'ใช้งาน' : 'ไม่ใช้งาน'}</td>
+                                    <td className="p-1">{k.tokens_remaining <= 0 ? t('statusNoTokens') : (k.status === 'active' ? t('statusActive') : t('statusInactive'))}</td>
                                     <td className="p-1 text-center">
                                          <Button size="sm" variant="secondary" onClick={() => handleUpdateStatus(k, k.platformId)} className="mr-2">
                                             {k.status === 'active' ? 'ระงับ' : 'เปิด'}

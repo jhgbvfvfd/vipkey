@@ -49,16 +49,31 @@ const KeyRow: React.FC<{
             <td className="p-1 text-slate-600">{apiKey.platformTitle}</td>
             <td className="p-1 text-slate-600">{apiKey.tokens_remaining.toLocaleString()}</td>
             <td className="p-1">
-                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                    apiKey.status === 'active' 
-                    ? 'bg-green-100 text-green-800' 
-                    : 'bg-slate-100 text-slate-800'
-                }`}>
-                    <svg className={`mr-1.5 h-2 w-2 ${apiKey.status === 'active' ? 'text-green-400' : 'text-slate-400'}`} fill="currentColor" viewBox="0 0 8 8">
-                        <circle cx={4} cy={4} r={3} />
-                    </svg>
-                    {apiKey.status === 'active' ? 'ใช้งาน' : 'ไม่ใช้งาน'}
-                </span>
+                {(() => {
+                    const statusKey = apiKey.tokens_remaining <= 0
+                        ? 'statusNoTokens'
+                        : apiKey.status === 'active'
+                            ? 'statusActive'
+                            : 'statusInactive';
+                    const statusColor = apiKey.tokens_remaining <= 0
+                        ? 'bg-red-100 text-red-800'
+                        : apiKey.status === 'active'
+                            ? 'bg-green-100 text-green-800'
+                            : 'bg-slate-100 text-slate-800';
+                    const dotColor = apiKey.tokens_remaining <= 0
+                        ? 'text-red-400'
+                        : apiKey.status === 'active'
+                            ? 'text-green-400'
+                            : 'text-slate-400';
+                    return (
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusColor}`}>
+                            <svg className={`mr-1.5 h-2 w-2 ${dotColor}`} fill="currentColor" viewBox="0 0 8 8">
+                                <circle cx={4} cy={4} r={3} />
+                            </svg>
+                            {t(statusKey as any)}
+                        </span>
+                    );
+                })()}
             </td>
             <td className="p-1 text-slate-600">{new Date(apiKey.createdAt).toLocaleDateString('th-TH')}</td>
             <td className="p-1 text-right">
