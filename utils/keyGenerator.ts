@@ -1,5 +1,5 @@
 
-export const generateKey = (prefix: string, pattern: number[]): string => {
+export const generateKey = (prefix: string, pattern: number[] = [4, 4, 4, 4]): string => {
   const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
   const pick = () => alphabet[Math.floor(Math.random() * alphabet.length)];
 

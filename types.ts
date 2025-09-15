@@ -39,7 +39,7 @@ export interface Platform {
   id: string;
   title: string;
   prefix: string;
-  pattern: number[];
+  pattern?: number[];
   apiEnabled?: boolean;
 }
 
