@@ -109,6 +109,15 @@ export const addBot = async (bot: Omit<Bot, 'id'> & {id: string}): Promise<void>
     await setData(`bots/${id}`, botData);
 };
 
+export const updateBot = async (bot: Bot): Promise<void> => {
+    const { id, ...botData } = bot;
+    await setData(`bots/${id}`, botData);
+};
+
+export const deleteBot = async (botId: string): Promise<void> => {
+    await deleteData(`bots/${botId}`);
+};
+
 export const getKeyLogs = async (): Promise<KeyLog[]> => {
     const data = await fetchData<Record<string, Omit<KeyLog, 'id'>>>('key_logs');
     return firebaseObjectToArray(data);

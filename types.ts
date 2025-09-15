@@ -47,6 +47,7 @@ export interface Bot {
     name: string;
     url: string;
     addedAt: string;
+    tokenCost: number;
 }
 
 export interface KeyLog {
