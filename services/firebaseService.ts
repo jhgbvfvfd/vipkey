@@ -1,5 +1,5 @@
 
-import { Platform, Agent, Bot, ApiKey, StandaloneKey } from '../types';
+import { Platform, Agent, Bot, ApiKey, StandaloneKey, KeyLog, IpBan } from '../types';
 
 // IMPORTANT: In a real application, these values should come from environment variables.
 // For this example, we are using the URL provided in the prompt.
@@ -76,6 +76,10 @@ export const updateAgent = async(agent: Agent): Promise<void> => {
     await setData(`agents/${id}`, agentData);
 }
 
+export const deleteAgent = async(agentId: string): Promise<void> => {
+    await deleteData(`agents/${agentId}`);
+}
+
 export const getStandaloneKeys = async (): Promise<StandaloneKey[]> => {
     const data = await fetchData<Record<string, Omit<StandaloneKey, 'id'>>>('standalone_keys');
     return firebaseObjectToArray(data);
@@ -103,4 +107,44 @@ export const getBots = async (): Promise<Bot[]> => {
 export const addBot = async (bot: Omit<Bot, 'id'> & {id: string}): Promise<void> => {
     const { id, ...botData } = bot;
     await setData(`bots/${id}`, botData);
+};
+
+export const updateBot = async (bot: Bot): Promise<void> => {
+    const { id, ...botData } = bot;
+    await setData(`bots/${id}`, botData);
+};
+
+export const deleteBot = async (botId: string): Promise<void> => {
+    await deleteData(`bots/${botId}`);
+};
+
+export const getKeyLogs = async (): Promise<KeyLog[]> => {
+    const data = await fetchData<Record<string, Omit<KeyLog, 'id'>>>('key_logs');
+    return firebaseObjectToArray(data);
+};
+
+export const recordKeyLog = async (log: Omit<KeyLog, 'id'>): Promise<void> => {
+    await fetch(`${FIREBASE_URL}key_logs.json`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(log),
+    });
+};
+
+export const getIpBans = async (userId: string): Promise<IpBan[]> => {
+    const data = await fetchData<Record<string, Omit<IpBan, 'id'>>>(`ip_bans/${userId}`);
+    return firebaseObjectToArray(data);
+};
+
+export const addIpBan = async (userId: string, ip: string): Promise<void> => {
+    const entry = { ip, userId, createdAt: new Date().toISOString() };
+    await fetch(`${FIREBASE_URL}ip_bans/${userId}.json`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(entry)
+    });
+};
+
+export const deleteIpBan = async (userId: string, id: string): Promise<void> => {
+    await deleteData(`ip_bans/${userId}/${id}`);
 };

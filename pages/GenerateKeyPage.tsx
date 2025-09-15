@@ -1,233 +1,106 @@
-import React, { useState } from 'react';
-import { useData } from '../App';
-import { Platform, StandaloneKey } from '../types';
-import { addStandaloneKey, updateStandaloneKey, deleteStandaloneKey } from '../services/firebaseService';
+import React, { useState, useEffect } from 'react';
+import { useData, useSettings } from '../App';
+import { StandaloneKey } from '../types';
+import { addStandaloneKey } from '../services/firebaseService';
 import { generateKey } from '../utils/keyGenerator';
 import Button from '../components/ui/Button';
 import Card, { CardHeader, CardTitle, CardContent } from '../components/ui/Card';
 import Modal from '../components/ui/Modal';
 import Input from '../components/ui/Input';
-
-const KeyRow: React.FC<{ 
-    apiKey: StandaloneKey;
-    onUpdateStatus: (key: StandaloneKey, status: 'active' | 'inactive') => void;
-    onDelete: (key: StandaloneKey) => void;
-}> = ({ apiKey, onUpdateStatus, onDelete }) => {
-    const [isMenuOpen, setIsMenuOpen] = useState(false);
-    const ref = React.useRef<HTMLTableCellElement>(null);
-
-     React.useEffect(() => {
-        const handleClickOutside = (event: MouseEvent) => {
-            if (ref.current && !ref.current.contains(event.target as Node)) {
-                setIsMenuOpen(false);
-            }
-        };
-        document.addEventListener("mousedown", handleClickOutside);
-        return () => document.removeEventListener("mousedown", handleClickOutside);
-    }, [ref]);
-
-    const handleToggleStatus = () => {
-        const newStatus = apiKey.status === 'active' ? 'inactive' : 'active';
-        onUpdateStatus(apiKey, newStatus);
-        setIsMenuOpen(false);
-    };
-
-    const handleDelete = () => {
-        onDelete(apiKey);
-        setIsMenuOpen(false);
-    };
-
-    return (
-        <tr className="border-b border-slate-200 last:border-b-0 odd:bg-white even:bg-slate-50 hover:bg-slate-100">
-            <td className="p-2 font-mono text-sm text-blue-600">{apiKey.key}</td>
-            <td className="p-2 text-slate-600">{apiKey.platformTitle}</td>
-            <td className="p-2 text-slate-600">{apiKey.tokens_remaining.toLocaleString()}</td>
-            <td className="p-2">
-                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                    apiKey.status === 'active' 
-                    ? 'bg-green-100 text-green-800' 
-                    : 'bg-slate-100 text-slate-800'
-                }`}>
-                    <svg className={`mr-1.5 h-2 w-2 ${apiKey.status === 'active' ? 'text-green-400' : 'text-slate-400'}`} fill="currentColor" viewBox="0 0 8 8">
-                        <circle cx={4} cy={4} r={3} />
-                    </svg>
-                    {apiKey.status === 'active' ? 'ใช้งาน' : 'ไม่ใช้งาน'}
-                </span>
-            </td>
-            <td className="p-2 text-slate-600">{new Date(apiKey.createdAt).toLocaleDateString('th-TH')}</td>
-            <td className="p-2 text-center relative" ref={ref}>
-                <button onClick={() => setIsMenuOpen(p => !p)} className="p-2 rounded-full hover:bg-slate-200 text-slate-500 hover:text-slate-700">
-                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" /></svg>
-                </button>
-                 {isMenuOpen && (
-                    <div className="absolute right-0 mt-2 w-40 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-10 origin-top-right text-left">
-                        <div className="py-1">
-                            <button onClick={handleToggleStatus} className="flex items-center gap-3 w-full px-4 py-2 text-sm text-slate-700 hover:bg-slate-100">
-                                {apiKey.status === 'active' ? 'ระงับคีย์' : 'เปิดใช้งาน'}
-                            </button>
-                            <button onClick={handleDelete} className="flex items-center gap-3 w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50">
-                                ลบคีย์
-                            </button>
-                        </div>
-                    </div>
-                )}
-            </td>
-        </tr>
-    );
-};
-
+import PlatformTabs from '../components/ui/PlatformTabs';
+import { ClipboardIcon, CheckIcon } from '@heroicons/react/24/outline';
 
 const GenerateKeyPage: React.FC = () => {
-    const { platforms, standaloneKeys, loading, refreshData } = useData();
-    const [isModalOpen, setIsModalOpen] = useState(false);
-    const [isConfirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
-    const [keyToDelete, setKeyToDelete] = useState<StandaloneKey | null>(null);
-    const [generatedKey, setGeneratedKey] = useState('');
-    const [keyGenData, setKeyGenData] = useState({ platformId: platforms[0]?.id || '', tokens: 100 });
-    const [error, setError] = useState('');
+  const { platforms, refreshData } = useData();
+  const { notify } = useSettings();
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [generatedKey, setGeneratedKey] = useState('');
+  const [selectedPlatformId, setSelectedPlatformId] = useState(platforms[0]?.id || '');
+  const [tokens, setTokens] = useState(100);
+  const [error, setError] = useState('');
+  const [copied, setCopied] = useState(false);
 
-    const handleGenerateKey = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setError('');
-        if (!keyGenData.platformId) {
-            setError('กรุณาเลือกแพลตฟอร์ม');
-            return;
-        }
-        
-        const platform = platforms.find(p => p.id === keyGenData.platformId);
-        if (!platform) {
-            setError('เลือกแพลตฟอร์มไม่ถูกต้อง');
-            return;
-        }
+  useEffect(() => {
+    if (platforms.length > 0 && !selectedPlatformId) {
+      setSelectedPlatformId(platforms[0].id);
+    }
+  }, [platforms, selectedPlatformId]);
 
-        try {
-            const newKeyString = generateKey(platform.prefix, platform.pattern);
-            const newKeyObject: Omit<StandaloneKey, 'id'> & {id: string} = {
-                id: `key_${Date.now()}`,
-                key: newKeyString,
-                tokens_remaining: Number(keyGenData.tokens),
-                status: 'active',
-                createdAt: new Date().toISOString(),
-                platformId: platform.id,
-                platformTitle: platform.title,
-            };
-            await addStandaloneKey(newKeyObject);
-            refreshData();
-            setGeneratedKey(newKeyString);
-            setIsModalOpen(true);
-        } catch (err) {
-            setError('ไม่สามารถสร้างคีย์ได้');
-            console.error(err);
-        }
-    };
+  const handleGenerateKey = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    if (!selectedPlatformId) {
+      setError('กรุณาเลือกแพลตฟอร์ม');
+      return;
+    }
+    const platform = platforms.find(p => p.id === selectedPlatformId);
+    if (!platform) {
+      setError('เลือกแพลตฟอร์มไม่ถูกต้อง');
+      return;
+    }
+    try {
+      const newKeyString = generateKey(platform.prefix, platform.pattern);
+      const newKeyObject: Omit<StandaloneKey, 'id'> & { id: string } = {
+        id: `key_${Date.now()}`,
+        key: newKeyString,
+        tokens_remaining: Number(tokens),
+        status: 'active',
+        createdAt: new Date().toISOString(),
+        platformId: platform.id,
+        platformTitle: platform.title,
+      };
+      await addStandaloneKey(newKeyObject);
+      refreshData();
+      setGeneratedKey(newKeyString);
+      setIsModalOpen(true);
+      notify('สร้างคีย์เรียบร้อย');
+    } catch {
+      setError('ไม่สามารถสร้างคีย์ได้');
+    }
+  };
 
-    const handleUpdateKeyStatus = async (key: StandaloneKey, status: 'active' | 'inactive') => {
-        const updatedKey = { ...key, status };
-        await updateStandaloneKey(updatedKey);
-        refreshData();
-    };
+  const handleModalCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(generatedKey);
+      setCopied(true);
+      notify('คัดลอกแล้ว');
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      notify('คัดลอกไม่สเร็จ', 'error');
+    }
+  };
 
-    const confirmDeleteKey = (key: StandaloneKey) => {
-        setKeyToDelete(key);
-        setConfirmDeleteOpen(true);
-    };
-
-    const handleDeleteKey = async () => {
-        if (!keyToDelete) return;
-        await deleteStandaloneKey(keyToDelete.id);
-        refreshData();
-        setConfirmDeleteOpen(false);
-        setKeyToDelete(null);
-    };
-    
-    React.useEffect(() => {
-        if (platforms.length > 0 && !keyGenData.platformId) {
-            setKeyGenData(prev => ({ ...prev, platformId: platforms[0].id }));
-        }
-    }, [platforms, keyGenData.platformId]);
-
-    return (
-        <div className="space-y-6">
-            <div>
-                <h1 className="text-xl font-bold text-slate-800">สร้างคีย์ทั่วไป</h1>
-                <p className="text-slate-500">สร้างและจัดการคีย์แบบใช้ครั้งเดียวสำหรับแพลตฟอร์มต่างๆ</p>
+  return (
+    <div className="space-y-6">
+      <PlatformTabs platforms={platforms} selected={selectedPlatformId} onSelect={setSelectedPlatformId} />
+      <Card className="max-w-xl">
+        <CardHeader>
+          <CardTitle>สร้างคีย์ใหม่</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleGenerateKey} className="space-y-4">
+            <Input label="โทเค็น" type="number" value={tokens} onChange={e => setTokens(Number(e.target.value))} required />
+            {error && <p className="text-red-500 text-sm">{error}</p>}
+            <div className="flex justify-end pt-2">
+              <Button type="submit" disabled={platforms.length === 0}>สร้าง</Button>
             </div>
+          </form>
+        </CardContent>
+      </Card>
 
-            <Card className="max-w-xl">
-                <CardHeader>
-                    <CardTitle>สร้างคีย์ใหม่</CardTitle>
-                </CardHeader>
-                <CardContent>
-                     <form onSubmit={handleGenerateKey} className="space-y-4">
-                        <div>
-                            <label htmlFor="platform" className="block text-sm font-medium text-slate-700 mb-1.5">แพลตฟอร์ม</label>
-                            <select
-                                id="platform"
-                                value={keyGenData.platformId}
-                                onChange={e => setKeyGenData({...keyGenData, platformId: e.target.value})}
-                                className="block w-full px-3 py-1.5 bg-white border border-slate-300 rounded-md text-sm shadow-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                                disabled={platforms.length === 0}
-                            >
-                                {platforms.length > 0 ? platforms.map(p => <option key={p.id} value={p.id}>{p.title}</option>) : <option>ไม่มีแพลตฟอร์ม</option>}
-                            </select>
-                        </div>
-                        <Input label="โทเค็น" type="number" value={keyGenData.tokens} onChange={e => setKeyGenData({...keyGenData, tokens: Number(e.target.value)})} required />
-                        {error && <p className="text-red-500 text-sm">{error}</p>}
-                        <div className="flex justify-end pt-2">
-                            <Button type="submit" disabled={platforms.length === 0}>สร้าง</Button>
-                        </div>
-                    </form>
-                </CardContent>
-            </Card>
-            
-            <Card>
-                <CardHeader>
-                    <CardTitle>คีย์ที่สร้างแล้ว</CardTitle>
-                </CardHeader>
-                <div className="overflow-x-auto">
-                    <table className="w-full text-left text-sm">
-                        <thead className="bg-slate-50 text-slate-500">
-                            <tr>
-                                <th className="p-2 font-semibold">คีย์</th>
-                                <th className="p-2 font-semibold">แพลตฟอร์ม</th>
-                                <th className="p-2 font-semibold">โทเค็น</th>
-                                <th className="p-2 font-semibold">สถานะ</th>
-                                <th className="p-2 font-semibold">วันที่สร้าง</th>
-                                <th className="p-2 font-semibold text-center">จัดการ</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {loading ? <tr><td colSpan={6} className="text-center p-4">กำลังโหลดคีย์...</td></tr> : 
-                            standaloneKeys.length > 0 ? standaloneKeys.map(k => <KeyRow key={k.id} apiKey={k} onUpdateStatus={handleUpdateKeyStatus} onDelete={confirmDeleteKey} />)
-                            : <tr><td colSpan={6} className="text-center p-6 text-slate-500">ยังไม่มีการสร้างคีย์ทั่วไป</td></tr>
-                            }
-                        </tbody>
-                    </table>
-                </div>
-            </Card>
-            
-            <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="สร้างคีย์สำเร็จ">
-                <div>
-                    <p className="text-slate-600 mb-4">คัดลอกคีย์ด้านล่างนี้ คีย์จะแสดงเพียงครั้งเดียวเท่านั้น</p>
-                    <div className="bg-slate-100 p-4 rounded-lg font-mono text-blue-600 break-all border border-slate-200">
-                        {generatedKey}
-                    </div>
-                     <div className="flex justify-end mt-6">
-                        <Button onClick={() => navigator.clipboard.writeText(generatedKey)}>คัดลอกไปยังคลิปบอร์ด</Button>
-                    </div>
-                </div>
-            </Modal>
-             <Modal isOpen={isConfirmDeleteOpen} onClose={() => setConfirmDeleteOpen(false)} title="ยืนยันการลบ">
-                 <div>
-                    <p className="text-slate-600 mb-4">คุณแน่ใจหรือไม่ว่าต้องการลบคีย์ <strong className="font-semibold text-slate-800 font-mono">{keyToDelete?.key}</strong>? การกระทำนี้ไม่สามารถย้อนกลับได้</p>
-                    <div className="flex justify-end gap-3 mt-6">
-                        <Button variant="secondary" onClick={() => setConfirmDeleteOpen(false)}>ยกเลิก</Button>
-                        <Button variant="danger" onClick={handleDeleteKey}>ยืนยันการลบ</Button>
-                    </div>
-                </div>
-            </Modal>
+      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="สร้างคีย์สำเร็จ">
+        <div>
+          <p className="text-slate-600 mb-4">คัดลอกคีย์ด้านล่างนี้ คีย์จะแสดงเพียงครั้งเดียวเท่านั้น</p>
+          <div className="bg-slate-100 p-4 rounded-lg font-mono text-blue-600 break-all border border-slate-200">{generatedKey}</div>
+          <div className="flex justify-end mt-6">
+            <Button onClick={handleModalCopy} leftIcon={<ClipboardIcon className="w-4 h-4" />}>
+              {copied ? <><CheckIcon className="w-4 h-4 mr-1" />คัดลอกแล้ว</> : 'คัดลอกไปยังคลิปบอร์ด'}
+            </Button>
+          </div>
         </div>
-    );
+      </Modal>
+    </div>
+  );
 };
 
 export default GenerateKeyPage;

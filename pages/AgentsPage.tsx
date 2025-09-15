@@ -1,33 +1,46 @@
 
 
 import React, { useState } from 'react';
-import { useData } from '../App';
+import { useData, useSettings } from '../App';
 import { Agent, Platform, CreditHistoryEntry, ApiKey } from '../types';
-import { addAgent, updateAgent } from '../services/firebaseService';
+import { addAgent, updateAgent, deleteAgent } from '../services/firebaseService';
 import Button from '../components/ui/Button';
 import Card, { CardHeader, CardTitle, CardContent } from '../components/ui/Card';
 import Modal from '../components/ui/Modal';
 import Input from '../components/ui/Input';
+import { MagnifyingGlassIcon } from '@heroicons/react/24/outline';
 
-const AgentCard: React.FC<{ 
-    agent: Agent; 
-    onViewHistory: (agent: Agent) => void; 
+const AgentCard: React.FC<{
+    agent: Agent;
+    onViewHistory: (agent: Agent) => void;
     onManageKeys: (agent: Agent) => void;
     onAddCredits: (agent: Agent) => void;
-    platforms: Platform[] 
-}> = ({ agent, onViewHistory, onManageKeys, onAddCredits, platforms }) => {
+    onDelete: (agent: Agent) => void;
+    onBan: (agent: Agent) => void;
+    platforms: Platform[]
+}> = ({ agent, onViewHistory, onManageKeys, onAddCredits, onDelete, onBan, platforms }) => {
     const platformMap = new Map(platforms.map(p => [p.id, p]));
 
     return (
         <Card>
             <CardHeader className="flex justify-between items-start">
                 <div>
-                    <CardTitle>{agent.username}</CardTitle>
+                    <CardTitle className={agent.status === 'banned' ? 'text-red-600' : undefined}>{agent.username}</CardTitle>
                     <p className="text-xs text-slate-400 font-mono mt-1">{agent.id}</p>
                 </div>
-                <div className="text-right">
-                    <p className="text-2xl font-bold text-blue-600">{agent.credits.toLocaleString()}</p>
-                    <p className="text-xs text-slate-500">เครดิตคงเหลือ</p>
+                <div className="flex items-start gap-2">
+                    <div className="text-right">
+                        <p className="text-2xl font-bold text-blue-600">{agent.credits.toLocaleString()}</p>
+                        <p className="text-xs text-slate-500">เครดิตคงเหลือ</p>
+                    </div>
+                    <div className="flex flex-col gap-1">
+                        <Button size="sm" variant={agent.status === 'banned' ? 'secondary' : 'danger'} onClick={() => onBan(agent)}>
+                            {agent.status === 'banned' ? 'ปลดแบน' : 'แบน'}
+                        </Button>
+                        <Button size="sm" variant="danger" onClick={() => onDelete(agent)}>
+                            ลบ
+                        </Button>
+                    </div>
                 </div>
             </CardHeader>
             <CardContent>
@@ -66,12 +79,13 @@ const AgentCard: React.FC<{
 
 
 const ManageKeysModal: React.FC<{
-    agent: Agent | null; 
+    agent: Agent | null;
     platforms: Platform[];
-    isOpen: boolean; 
+    isOpen: boolean;
     onClose: () => void;
     onUpdateAgent: (agent: Agent) => Promise<void>;
 }> = ({ agent, platforms, isOpen, onClose, onUpdateAgent }) => {
+    const { notify, t } = useSettings();
     const [keyToConfirmDelete, setKeyToConfirmDelete] = useState<{key: ApiKey, platformId: string} | null>(null);
     if (!agent) return null;
 
@@ -88,6 +102,7 @@ const ManageKeysModal: React.FC<{
             keysForPlatform[keyIndex] = { ...keysForPlatform[keyIndex], status: keyToUpdate.status === 'active' ? 'inactive' : 'active' };
             updatedAgent.keys[platformId] = keysForPlatform;
             await onUpdateAgent(updatedAgent);
+            notify(keyToUpdate.status === 'active' ? 'ระงับคีย์แล้ว' : 'เปิดใช้งานคีย์แล้ว');
         }
     };
 
@@ -107,6 +122,7 @@ const ManageKeysModal: React.FC<{
         
         await onUpdateAgent(updatedAgent);
         setKeyToConfirmDelete(null);
+        notify('ลบคีย์แล้ว');
     };
 
     return (
@@ -127,7 +143,7 @@ const ManageKeysModal: React.FC<{
                                 <tr key={k.key} className="border-b border-slate-200 last:border-b-0">
                                     <td className="p-1 font-mono text-xs text-blue-600">{k.key}</td>
                                     <td className="p-1">{k.platformTitle}</td>
-                                    <td className="p-1">{k.status === 'active' ? 'ใช้งาน' : 'ไม่ใช้งาน'}</td>
+                                    <td className="p-1">{k.tokens_remaining <= 0 ? t('statusNoTokens') : (k.status === 'active' ? t('statusActive') : t('statusInactive'))}</td>
                                     <td className="p-1 text-center">
                                          <Button size="sm" variant="secondary" onClick={() => handleUpdateStatus(k, k.platformId)} className="mr-2">
                                             {k.status === 'active' ? 'ระงับ' : 'เปิด'}
@@ -163,6 +179,7 @@ const ManageKeysModal: React.FC<{
 
 const AgentsPage: React.FC = () => {
     const { agents, platforms, loading, refreshData } = useData();
+    const { notify, t } = useSettings();
     const [isAddAgentModalOpen, setAddAgentModalOpen] = useState(false);
     const [isHistoryModalOpen, setHistoryModalOpen] = useState(false);
     const [isKeysModalOpen, setKeysModalOpen] = useState(false);
@@ -171,6 +188,7 @@ const AgentsPage: React.FC = () => {
     const [newAgentData, setNewAgentData] = useState({ username: '', password: '', credits: 1000 });
     const [creditsToAdd, setCreditsToAdd] = useState(100);
     const [error, setError] = useState('');
+    const [query, setQuery] = useState('');
 
     const handleAddAgent = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -203,13 +221,16 @@ const AgentsPage: React.FC = () => {
                 createdAt: new Date().toISOString(),
                 keys: {},
                 creditHistory: [initialHistoryEntry],
+                status: 'active',
             });
             refreshData();
             setAddAgentModalOpen(false);
             setNewAgentData({ username: '', password: '', credits: 1000 });
+            notify('สร้างตัวแทนเรียบร้อย');
         } catch (err) {
             setError('ไม่สามารถเพิ่มตัวแทนได้');
             console.error(err);
+            notify('ไม่สามารถเพิ่มตัวแทนได้', 'error');
         }
     };
     
@@ -233,21 +254,25 @@ const AgentsPage: React.FC = () => {
         e.preventDefault();
         if (!selectedAgent || creditsToAdd <= 0) return;
 
-        const updatedAgent = JSON.parse(JSON.stringify(selectedAgent));
-        const newBalance = updatedAgent.credits + creditsToAdd;
-        updatedAgent.credits = newBalance;
+        try {
+            const updatedAgent = JSON.parse(JSON.stringify(selectedAgent));
+            const newBalance = updatedAgent.credits + creditsToAdd;
+            updatedAgent.credits = newBalance;
 
-        const newHistoryEntry: CreditHistoryEntry = {
-            date: new Date().toISOString(),
-            action: `เติมเครดิตโดยแอดมิน`,
-            amount: creditsToAdd,
-            balanceAfter: newBalance,
-        };
-        updatedAgent.creditHistory = [...(updatedAgent.creditHistory || []), newHistoryEntry];
-        
-        await handleUpdateAgent(updatedAgent);
-        
-        setAddCreditsModalOpen(false);
+            const newHistoryEntry: CreditHistoryEntry = {
+                date: new Date().toISOString(),
+                action: `เติมเครดิตโดยแอดมิน`,
+                amount: creditsToAdd,
+                balanceAfter: newBalance,
+            };
+            updatedAgent.creditHistory = [...(updatedAgent.creditHistory || []), newHistoryEntry];
+
+            await handleUpdateAgent(updatedAgent);
+            setAddCreditsModalOpen(false);
+            notify('เติมเครดิตสำเร็จ');
+        } catch (err) {
+            notify('เติมเครดิตไม่สำเร็จ', 'error');
+        }
     };
 
     const handleUpdateAgent = async (agent: Agent) => {
@@ -257,22 +282,51 @@ const AgentsPage: React.FC = () => {
         setSelectedAgent(agent); 
     };
 
+    const filteredAgents = agents.filter(a => a.username.toLowerCase().includes(query.toLowerCase()));
+
+    const handleBanAgent = async (agent: Agent) => {
+        const updatedAgent = { ...agent, status: agent.status === 'banned' ? 'active' : 'banned' };
+        await updateAgent(updatedAgent);
+        refreshData();
+        notify(updatedAgent.status === 'banned' ? 'แบนตัวแทนแล้ว' : 'ปลดแบนตัวแทนแล้ว');
+    };
+    const handleDeleteAgent = async (agent: Agent) => {
+        await deleteAgent(agent.id);
+        refreshData();
+        notify('ลบตัวแทนแล้ว');
+    };
+
     return (
         <div className="space-y-6">
-             <div className="flex flex-col md:flex-row justify-between md:items-center gap-4">
-                <div>
-                    <h1 className="text-xl font-bold text-slate-800">จัดการตัวแทน</h1>
-                    <p className="text-slate-500">เพิ่มและดูข้อมูลตัวแทนในระบบ</p>
+            <div className="flex justify-end">
+                <div className="flex items-center gap-2">
+                    <Input
+                        placeholder="ค้นหา..."
+                        value={query}
+                        onChange={e => setQuery(e.target.value)}
+                        leftIcon={<MagnifyingGlassIcon className="w-4 h-4" />}
+                    />
+                    <Button onClick={() => setAddAgentModalOpen(true)}>+ เพิ่มตัวแทน</Button>
                 </div>
-                <Button onClick={() => setAddAgentModalOpen(true)}>+ เพิ่มตัวแทน</Button>
             </div>
 
             {loading ? <p>กำลังโหลดข้อมูลตัวแทน...</p> : (
                 <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                    {agents.map(u => <AgentCard key={u.id} agent={u} onViewHistory={handleOpenHistory} onManageKeys={handleOpenKeys} onAddCredits={handleOpenAddCredits} platforms={platforms} />)}
+                    {filteredAgents.map(u => (
+                        <AgentCard
+                            key={u.id}
+                            agent={u}
+                            onViewHistory={handleOpenHistory}
+                            onManageKeys={handleOpenKeys}
+                            onAddCredits={handleOpenAddCredits}
+                            onBan={handleBanAgent}
+                            onDelete={handleDeleteAgent}
+                            platforms={platforms}
+                        />
+                    ))}
                 </div>
             )}
-             { !loading && agents.length === 0 && <p className="text-slate-500 text-center py-10">ไม่พบตัวแทน คลิก "+ เพิ่มตัวแทน" เพื่อสร้าง</p>}
+             { !loading && filteredAgents.length === 0 && <p className="text-slate-500 text-center py-10">ไม่พบตัวแทน</p>}
 
             <Modal isOpen={isAddAgentModalOpen} onClose={() => setAddAgentModalOpen(false)} title="เพิ่มตัวแทนใหม่">
                  <form onSubmit={handleAddAgent} className="space-y-4">

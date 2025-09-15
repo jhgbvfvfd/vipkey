@@ -24,6 +24,9 @@ export interface Agent {
   createdAt: string;
   creditHistory?: CreditHistoryEntry[];
   user?: null; // Added for future use
+  status?: 'active' | 'suspended' | 'banned';
+  ipBanEnabled?: boolean;
+  parentId?: string;
 }
 
 export interface StandaloneKey extends ApiKey {
@@ -45,4 +48,21 @@ export interface Bot {
     name: string;
     url: string;
     addedAt: string;
+    tokenCost: number;
+}
+
+export interface KeyLog {
+    id: string;
+    key: string;
+    agentId: string;
+    ip: string;
+    usedAt: string;
+    tokensUsed?: number;
+}
+
+export interface IpBan {
+    id: string;
+    ip: string;
+    userId: string;
+    createdAt: string;
 }

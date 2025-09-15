@@ -1,5 +1,5 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { useData } from '../App';
+import React, { useState } from 'react';
+import { useData, useSettings } from '../App';
 import { addPlatform, updatePlatform, deletePlatform } from '../services/firebaseService';
 import { Platform } from '../types';
 import Button from '../components/ui/Button';
@@ -7,47 +7,7 @@ import Card, { CardHeader, CardTitle, CardContent } from '../components/ui/Card'
 import Modal from '../components/ui/Modal';
 import Input from '../components/ui/Input';
 import ToggleSwitch from '../components/ui/ToggleSwitch';
-
-const DropdownMenu: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-    const [isOpen, setIsOpen] = useState(false);
-    const ref = useRef<HTMLDivElement>(null);
-
-    useEffect(() => {
-        const handleClickOutside = (event: MouseEvent) => {
-            if (ref.current && !ref.current.contains(event.target as Node)) {
-                setIsOpen(false);
-            }
-        };
-        document.addEventListener("mousedown", handleClickOutside);
-        return () => document.removeEventListener("mousedown", handleClickOutside);
-    }, [ref]);
-
-    return (
-        <div className="relative" ref={ref}>
-            <button onClick={() => setIsOpen(prev => !prev)} className="p-2 rounded-full hover:bg-slate-100 text-slate-500 hover:text-slate-700">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                    <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
-                </svg>
-            </button>
-            {isOpen && (
-                <div className="absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-20 origin-top-right">
-                    <div className="py-1" onClick={() => setIsOpen(false)}>
-                        {children}
-                    </div>
-                </div>
-            )}
-        </div>
-    );
-};
-
-const DropdownMenuItem: React.FC<{ onClick: () => void; children: React.ReactNode, className?: string }> = ({ onClick, children, className }) => (
-    <button
-        onClick={onClick}
-        className={`flex items-center gap-3 w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-100 ${className}`}
-    >
-        {children}
-    </button>
-);
+import { DropdownMenu, DropdownMenuItem } from '../components/ui/Dropdown';
 
 
 const PlatformCard: React.FC<{ platform: Platform; onToggleApi: (platform: Platform) => void; onDelete: (platform: Platform) => void; }> = ({ platform, onToggleApi, onDelete }) => {
@@ -56,7 +16,10 @@ const PlatformCard: React.FC<{ platform: Platform; onToggleApi: (platform: Platf
         <Card>
             <CardHeader className="flex justify-between items-start">
                 <div>
-                    <CardTitle>{platform.title}</CardTitle>
+                    <div className="flex items-center gap-2">
+                        <span className={`h-2 w-2 rounded-full ${isApiEnabled ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`}></span>
+                        <CardTitle>{platform.title}</CardTitle>
+                    </div>
                     <p className="text-sm text-slate-500 font-mono bg-slate-100 border border-slate-200 px-2 py-1 rounded-md inline-block mt-2">{platform.id}</p>
                 </div>
                  <DropdownMenu>
@@ -75,6 +38,7 @@ const PlatformCard: React.FC<{ platform: Platform; onToggleApi: (platform: Platf
                             onChange={() => onToggleApi(platform)}
                         />
                     </div>
+                    {!isApiEnabled && <p className="text-red-600 text-sm">API เซิร์ฟเวอร์นี้ถูกปิด</p>}
                     <p><span className="font-semibold text-slate-600">คำนำหน้าคีย์:</span> <span className="font-mono text-blue-600">{platform.prefix}</span></p>
                     <p><span className="font-semibold text-slate-600">รูปแบบคีย์:</span> <span className="font-mono text-blue-600">{platform.pattern?.join('-') ?? 'N/A'}</span></p>
                 </div>
@@ -86,6 +50,7 @@ const PlatformCard: React.FC<{ platform: Platform; onToggleApi: (platform: Platf
 
 const PlatformsPage: React.FC = () => {
     const { platforms, loading, refreshData } = useData();
+    const { notify, t } = useSettings();
     const [isAddModalOpen, setAddModalOpen] = useState(false);
     const [isConfirmDeleteModalOpen, setConfirmDeleteModalOpen] = useState(false);
     const [platformToProcess, setPlatformToProcess] = useState<Platform | null>(null);
@@ -139,6 +104,7 @@ const PlatformsPage: React.FC = () => {
         const updatedPlatform = { ...platform, apiEnabled: platform.apiEnabled === false };
         await updatePlatform(updatedPlatform);
         refreshData();
+        notify(updatedPlatform.apiEnabled ? 'เปิดใช้งาน API แล้ว' : 'ปิดใช้งาน API แล้ว');
     };
 
     const confirmDelete = (platform: Platform) => {
@@ -156,11 +122,7 @@ const PlatformsPage: React.FC = () => {
     
   return (
     <div className="space-y-6">
-        <div className="flex flex-col md:flex-row justify-between md:items-center gap-4">
-            <div>
-                <h1 className="text-xl font-bold text-slate-800">จัดการแพลตฟอร์ม</h1>
-                <p className="text-slate-500">เพิ่ม, แก้ไข, และลบแพลตฟอร์มสำหรับสร้างคีย์</p>
-            </div>
+        <div className="flex justify-end">
             <Button onClick={() => setAddModalOpen(true)}>+ เพิ่มแพลตฟอร์ม</Button>
         </div>
 

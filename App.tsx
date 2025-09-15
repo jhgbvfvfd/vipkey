@@ -1,5 +1,7 @@
 
 import React, { useState, useCallback, useMemo, createContext, useContext, useEffect } from 'react';
+import { Toaster, toast } from 'react-hot-toast';
+import { translations, Language } from './utils/i18n';
 import { HashRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import LoginPage from './pages/LoginPage';
 import Layout from './components/layout/Layout';
@@ -9,10 +11,22 @@ import AgentsPage from './pages/AgentsPage';
 import BotsPage from './pages/BotsPage';
 import ApiGuidePage from './pages/ApiGuidePage';
 import GenerateKeyPage from './pages/GenerateKeyPage';
+import StandaloneKeysPage from './pages/StandaloneKeysPage';
+import KeyManagementPage from './pages/KeyManagementPage';
 import AgentDashboardPage from './pages/AgentDashboardPage';
 import AgentKeysPage from './pages/AgentKeysPage';
-import { Agent, Platform, Bot, StandaloneKey } from './types';
-import { getPlatforms, getAgents, getBots, getStandaloneKeys } from './services/firebaseService';
+import ChangePasswordPage from './pages/ChangePasswordPage';
+import ReportsPage from './pages/ReportsPage';
+import SettingsPage from './pages/SettingsPage';
+import AgentProfilePage from './pages/AgentProfilePage';
+import AgentUsagePage from './pages/AgentUsagePage';
+import KeyLogsPage from './pages/KeyLogsPage';
+import IpBanPage from './pages/IpBanPage';
+import AgentMenusPage from './pages/AgentMenusPage';
+import AgentGenerateKeyPage from './pages/AgentGenerateKeyPage';
+import AgentAgentsPage from './pages/AgentAgentsPage';
+import { Agent, Platform, Bot, StandaloneKey, KeyLog } from './types';
+import { getPlatforms, getAgents, getBots, getStandaloneKeys, getKeyLogs } from './services/firebaseService';
 
 type UserRole = 'admin' | 'agent';
 interface User {
@@ -23,8 +37,9 @@ interface User {
 interface AuthContextType {
   isAuthenticated: boolean;
   user: User | null;
-  login: (username: string, password?: string) => Promise<boolean>;
+  login: (username: string, password?: string) => Promise<'success' | 'banned' | 'invalid'>;
   logout: () => void;
+  updateUserData: (data: Agent) => void;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -42,6 +57,7 @@ interface DataContextType {
     platforms: Platform[];
     bots: Bot[];
     standaloneKeys: StandaloneKey[];
+    keyLogs: KeyLog[];
     loading: boolean;
     refreshData: () => void;
 }
@@ -56,26 +72,99 @@ export const useData = () => {
     return context;
 }
 
+interface Settings {
+  notifications: boolean;
+  darkMode: boolean;
+  language: Language;
+}
+
+const defaultSettings: Settings = {
+  notifications: true,
+  darkMode: false,
+  language: 'th',
+};
+
+interface SettingsContextType {
+  settings: Settings;
+  updateSettings: (s: Settings) => void;
+  notify: (msg: string, type?: 'success' | 'error') => void;
+  t: (key: keyof typeof translations['en']) => string;
+}
+
+const SettingsContext = createContext<SettingsContextType | null>(null);
+
+export const useSettings = () => {
+  const ctx = useContext(SettingsContext);
+  if (!ctx) {
+    throw new Error('useSettings must be used within SettingsProvider');
+  }
+  return ctx;
+};
+
+const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [settings, setSettings] = useState<Settings>(() => {
+    const saved = localStorage.getItem('settings');
+    return saved ? JSON.parse(saved) : defaultSettings;
+  });
+
+  useEffect(() => {
+    const root = document.documentElement;
+    if (settings.darkMode) {
+      root.classList.add('dark');
+    } else {
+      root.classList.remove('dark');
+    }
+  }, [settings.darkMode]);
+
+  useEffect(() => {
+    document.documentElement.setAttribute('lang', settings.language);
+  }, [settings.language]);
+
+  useEffect(() => {
+    localStorage.setItem('settings', JSON.stringify(settings));
+  }, [settings]);
+
+  const updateSettings = (s: Settings) => setSettings(s);
+
+  const notify = useCallback((message: string, type: 'success' | 'error' = 'success') => {
+    if (!settings.notifications) return;
+    type === 'success' ? toast.success(message) : toast.error(message);
+  }, [settings.notifications]);
+
+  const t = useCallback((key: keyof typeof translations['en']) => {
+    return translations[settings.language][key] || key;
+  }, [settings.language]);
+
+  return (
+    <SettingsContext.Provider value={{ settings, updateSettings, notify, t }}>
+      {children}
+    </SettingsContext.Provider>
+  );
+};
+
 const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [agents, setAgents] = useState<Agent[]>([]);
     const [platforms, setPlatforms] = useState<Platform[]>([]);
     const [bots, setBots] = useState<Bot[]>([]);
     const [standaloneKeys, setStandaloneKeys] = useState<StandaloneKey[]>([]);
+    const [keyLogs, setKeyLogs] = useState<KeyLog[]>([]);
     const [loading, setLoading] = useState(true);
 
     const fetchData = useCallback(async () => {
         setLoading(true);
         try {
-            const [platformsData, agentsData, botsData, keysData] = await Promise.all([
+            const [platformsData, agentsData, botsData, keysData, logsData] = await Promise.all([
                 getPlatforms(),
                 getAgents(),
                 getBots(),
                 getStandaloneKeys(),
+                getKeyLogs(),
             ]);
             setPlatforms(platformsData);
             setAgents(agentsData);
             setBots(botsData);
             setStandaloneKeys(keysData);
+            setKeyLogs(logsData);
         } catch (error) {
             console.error("Failed to fetch data:", error);
         } finally {
@@ -92,9 +181,10 @@ const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
         platforms,
         bots,
         standaloneKeys,
+        keyLogs,
         loading,
         refreshData: fetchData,
-    }), [agents, platforms, bots, standaloneKeys, loading, fetchData]);
+    }), [agents, platforms, bots, standaloneKeys, keyLogs, loading, fetchData]);
     
     return <DataContext.Provider value={value}>{children}</DataContext.Provider>;
 };
@@ -105,13 +195,14 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
         return storedUser ? JSON.parse(storedUser) : null;
     });
 
-    const login = useCallback(async (username: string, password?: string): Promise<boolean> => {
+    const login = useCallback(async (username: string, password?: string): Promise<'success' | 'banned' | 'invalid'> => {
         // Admin Login
-        if (username === 'admin' && password === 'admin') {
+        const storedAdminPassword = localStorage.getItem('adminPassword') || 'admin';
+        if (username === 'admin' && password === storedAdminPassword) {
             const adminUser: User = { role: 'admin', data: { username: 'admin' } };
             sessionStorage.setItem('user', JSON.stringify(adminUser));
             setUser(adminUser);
-            return true;
+            return 'success';
         }
 
         // Agent Login
@@ -119,16 +210,19 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
             const agents = await getAgents();
             const foundAgent = agents.find(agent => agent.username === username && agent.password === password);
             if (foundAgent) {
+                if (foundAgent.status === 'banned') {
+                    return 'banned';
+                }
                 const agentUser: User = { role: 'agent', data: foundAgent };
                 sessionStorage.setItem('user', JSON.stringify(agentUser));
                 setUser(agentUser);
-                return true;
+                return 'success';
             }
         } catch (error) {
             console.error("Error fetching agents for login:", error);
         }
 
-        return false;
+        return 'invalid';
     }, []);
 
     const logout = useCallback(() => {
@@ -136,12 +230,20 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
         setUser(null);
     }, []);
 
+    const updateUserData = useCallback((data: Agent) => {
+        if (!user) return;
+        const newUser: User = { ...user, data };
+        sessionStorage.setItem('user', JSON.stringify(newUser));
+        setUser(newUser);
+    }, [user]);
+
     const authContextValue = useMemo(() => ({
         isAuthenticated: !!user,
         user,
         login,
         logout,
-    }), [user, login, logout]);
+        updateUserData,
+    }), [user, login, logout, updateUserData]);
 
     return (
         <AuthContext.Provider value={authContextValue}>
@@ -153,11 +255,14 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
 
 const App: React.FC = () => {
   return (
-    <AuthProvider>
+    <SettingsProvider>
+      <AuthProvider>
         <DataProvider>
-            <AppRoutes />
+          <AppRoutes />
+          <Toaster position="top-right" />
         </DataProvider>
-    </AuthProvider>
+      </AuthProvider>
+    </SettingsProvider>
   );
 };
 
@@ -191,9 +296,17 @@ const AdminRoutes: React.FC = () => (
         <Route path="/" element={<DashboardPage />} />
         <Route path="/platforms" element={<PlatformsPage />} />
         <Route path="/agents" element={<AgentsPage />} />
+        <Route path="/agent-menus" element={<AgentMenusPage />} />
+        <Route path="/key-management" element={<KeyManagementPage />} />
         <Route path="/generate-key" element={<GenerateKeyPage />} />
+        <Route path="/keys" element={<StandaloneKeysPage />} />
         <Route path="/bots" element={<BotsPage />} />
         <Route path="/api-guide" element={<ApiGuidePage />} />
+        <Route path="/reports" element={<ReportsPage />} />
+        <Route path="/logs" element={<KeyLogsPage />} />
+        <Route path="/ip-bans" element={<IpBanPage />} />
+        <Route path="/settings" element={<SettingsPage />} />
+        <Route path="/change-password" element={<ChangePasswordPage />} />
         <Route path="*" element={<Navigate to="/" />} />
     </Routes>
 );
@@ -201,8 +314,16 @@ const AdminRoutes: React.FC = () => (
 const AgentRoutes: React.FC = () => (
     <Routes>
         <Route path="/" element={<AgentDashboardPage />} />
+        <Route path="/key-management" element={<KeyManagementPage />} />
         <Route path="/my-keys" element={<AgentKeysPage />} />
+        <Route path="/generate-key" element={<AgentGenerateKeyPage />} />
         <Route path="/bots" element={<BotsPage />} />
+        <Route path="/profile" element={<AgentProfilePage />} />
+        <Route path="/agents" element={<AgentAgentsPage />} />
+        <Route path="/usage" element={<AgentUsagePage />} />
+        <Route path="/logs" element={<KeyLogsPage />} />
+        <Route path="/ip-bans" element={<IpBanPage />} />
+        <Route path="/change-password" element={<ChangePasswordPage />} />
         <Route path="*" element={<Navigate to="/" />} />
     </Routes>
 );
