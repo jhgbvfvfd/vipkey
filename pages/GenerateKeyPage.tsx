@@ -1,12 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useData, useSettings } from '../App';
-import { Platform, StandaloneKey } from '../types';
+import { StandaloneKey } from '../types';
 import { addStandaloneKey, updateStandaloneKey, deleteStandaloneKey } from '../services/firebaseService';
 import { generateKey } from '../utils/keyGenerator';
 import Button from '../components/ui/Button';
 import Card, { CardHeader, CardTitle, CardContent } from '../components/ui/Card';
 import Modal from '../components/ui/Modal';
 import Input from '../components/ui/Input';
+import PlatformTabs from '../components/ui/PlatformTabs';
 import {
     ClipboardIcon,
     CheckIcon,
@@ -47,7 +48,6 @@ const KeyRow: React.FC<{
     return (
         <tr className="border-b border-slate-200 last:border-b-0 odd:bg-white even:bg-slate-50 hover:bg-slate-100">
             <td className="p-2 font-mono text-sm text-blue-600">{apiKey.key}</td>
-            <td className="p-2 text-slate-600">{apiKey.platformTitle}</td>
             <td className="p-2 text-slate-600">{apiKey.tokens_remaining.toLocaleString()}</td>
             <td className="p-2">
                 {(() => {
@@ -122,18 +122,19 @@ const GenerateKeyPage: React.FC = () => {
     const [isConfirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
     const [keyToDelete, setKeyToDelete] = useState<StandaloneKey | null>(null);
     const [generatedKey, setGeneratedKey] = useState('');
-    const [keyGenData, setKeyGenData] = useState({ platformId: platforms[0]?.id || '', tokens: 100 });
+    const [selectedPlatformId, setSelectedPlatformId] = useState(platforms[0]?.id || '');
+    const [tokens, setTokens] = useState(100);
     const [error, setError] = useState('');
 
     const handleGenerateKey = async (e: React.FormEvent) => {
         e.preventDefault();
         setError('');
-        if (!keyGenData.platformId) {
+        if (!selectedPlatformId) {
             setError('กรุณาเลือกแพลตฟอร์ม');
             return;
         }
-        
-        const platform = platforms.find(p => p.id === keyGenData.platformId);
+
+        const platform = platforms.find(p => p.id === selectedPlatformId);
         if (!platform) {
             setError('เลือกแพลตฟอร์มไม่ถูกต้อง');
             return;
@@ -141,10 +142,10 @@ const GenerateKeyPage: React.FC = () => {
 
         try {
             const newKeyString = generateKey(platform.prefix, platform.pattern);
-            const newKeyObject: Omit<StandaloneKey, 'id'> & {id: string} = {
+            const newKeyObject: Omit<StandaloneKey, 'id'> & { id: string } = {
                 id: `key_${Date.now()}`,
                 key: newKeyString,
-                tokens_remaining: Number(keyGenData.tokens),
+                tokens_remaining: Number(tokens),
                 status: 'active',
                 createdAt: new Date().toISOString(),
                 platformId: platform.id,
@@ -196,33 +197,24 @@ const GenerateKeyPage: React.FC = () => {
         }
     };
     
-    React.useEffect(() => {
-        if (platforms.length > 0 && !keyGenData.platformId) {
-            setKeyGenData(prev => ({ ...prev, platformId: platforms[0].id }));
+    useEffect(() => {
+        if (platforms.length > 0 && !selectedPlatformId) {
+            setSelectedPlatformId(platforms[0].id);
         }
-    }, [platforms, keyGenData.platformId]);
+    }, [platforms, selectedPlatformId]);
+
+    const filteredKeys = standaloneKeys.filter(k => k.platformId === selectedPlatformId);
 
     return (
         <div className="space-y-6">
+            <PlatformTabs platforms={platforms} selected={selectedPlatformId} onSelect={setSelectedPlatformId} />
             <Card className="max-w-xl">
                 <CardHeader>
                     <CardTitle>สร้างคีย์ใหม่</CardTitle>
                 </CardHeader>
                 <CardContent>
-                     <form onSubmit={handleGenerateKey} className="space-y-4">
-                        <div>
-                            <label htmlFor="platform" className="block text-sm font-medium text-slate-700 mb-1.5">แพลตฟอร์ม</label>
-                            <select
-                                id="platform"
-                                value={keyGenData.platformId}
-                                onChange={e => setKeyGenData({...keyGenData, platformId: e.target.value})}
-                                className="block w-full px-3 py-1.5 bg-white border border-slate-300 rounded-md text-sm shadow-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                                disabled={platforms.length === 0}
-                            >
-                                {platforms.length > 0 ? platforms.map(p => <option key={p.id} value={p.id}>{p.title}</option>) : <option>ไม่มีแพลตฟอร์ม</option>}
-                            </select>
-                        </div>
-                        <Input label="โทเค็น" type="number" value={keyGenData.tokens} onChange={e => setKeyGenData({...keyGenData, tokens: Number(e.target.value)})} required />
+                    <form onSubmit={handleGenerateKey} className="space-y-4">
+                        <Input label="โทเค็น" type="number" value={tokens} onChange={e => setTokens(Number(e.target.value))} required />
                         {error && <p className="text-red-500 text-sm">{error}</p>}
                         <div className="flex justify-end pt-2">
                             <Button type="submit" disabled={platforms.length === 0}>สร้าง</Button>
@@ -230,7 +222,7 @@ const GenerateKeyPage: React.FC = () => {
                     </form>
                 </CardContent>
             </Card>
-            
+
             <Card>
                 <CardHeader>
                     <CardTitle>คีย์ที่สร้างแล้ว</CardTitle>
@@ -240,7 +232,6 @@ const GenerateKeyPage: React.FC = () => {
                         <thead className="bg-slate-50 text-slate-500">
                             <tr>
                                 <th className="p-2 font-semibold">คีย์</th>
-                                <th className="p-2 font-semibold">แพลตฟอร์ม</th>
                                 <th className="p-2 font-semibold">โทเค็น</th>
                                 <th className="p-2 font-semibold">สถานะ</th>
                                 <th className="p-2 font-semibold">วันที่สร้าง</th>
@@ -248,10 +239,13 @@ const GenerateKeyPage: React.FC = () => {
                             </tr>
                         </thead>
                         <tbody>
-                            {loading ? <tr><td colSpan={6} className="text-center p-4">กำลังโหลดคีย์...</td></tr> : 
-                            standaloneKeys.length > 0 ? standaloneKeys.map(k => <KeyRow key={k.id} apiKey={k} onUpdateStatus={handleUpdateKeyStatus} onDelete={confirmDeleteKey} />)
-                            : <tr><td colSpan={6} className="text-center p-6 text-slate-500">ยังไม่มีการสร้างคีย์ทั่วไป</td></tr>
-                            }
+                            {loading ? (
+                                <tr><td colSpan={5} className="text-center p-4">กำลังโหลดคีย์...</td></tr>
+                            ) : filteredKeys.length > 0 ? (
+                                filteredKeys.map(k => <KeyRow key={k.id} apiKey={k} onUpdateStatus={handleUpdateKeyStatus} onDelete={confirmDeleteKey} />)
+                            ) : (
+                                <tr><td colSpan={5} className="text-center p-6 text-slate-500">ยังไม่มีการสร้างคีย์ทั่วไป</td></tr>
+                            )}
                         </tbody>
                     </table>
                 </div>

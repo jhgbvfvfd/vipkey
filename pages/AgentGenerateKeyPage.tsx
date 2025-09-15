@@ -7,6 +7,7 @@ import Button from '../components/ui/Button';
 import Card, { CardHeader, CardTitle, CardContent } from '../components/ui/Card';
 import Modal from '../components/ui/Modal';
 import Input from '../components/ui/Input';
+import PlatformTabs from '../components/ui/PlatformTabs';
 
 const AgentGenerateKeyPage: React.FC = () => {
     const { platforms, refreshData } = useData();
@@ -16,15 +17,16 @@ const AgentGenerateKeyPage: React.FC = () => {
 
     const [isKeyModalOpen, setKeyModalOpen] = useState(false);
     const [generatedKey, setGeneratedKey] = useState('');
-    const [keyGenData, setKeyGenData] = useState({ platformId: platforms[0]?.id || '', tokens: 100 });
+    const [selectedPlatformId, setSelectedPlatformId] = useState(platforms[0]?.id || '');
+    const [tokens, setTokens] = useState(100);
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
 
     useEffect(() => {
-        if (platforms.length > 0 && !keyGenData.platformId) {
-            setKeyGenData(prev => ({ ...prev, platformId: platforms[0].id }));
+        if (platforms.length > 0 && !selectedPlatformId) {
+            setSelectedPlatformId(platforms[0].id);
         }
-    }, [platforms, keyGenData.platformId]);
+    }, [platforms, selectedPlatformId]);
 
     const handleUpdateAgentData = async (updatedAgent: Agent) => {
         await updateAgent(updatedAgent);
@@ -37,14 +39,14 @@ const AgentGenerateKeyPage: React.FC = () => {
         setError('');
         setLoading(true);
 
-        if (!keyGenData.platformId) {
+        if (!selectedPlatformId) {
             setError('กรุณาเลือกแพลตฟอร์ม'); setLoading(false); return;
         }
-        const platform = platforms.find(p => p.id === keyGenData.platformId);
+        const platform = platforms.find(p => p.id === selectedPlatformId);
         if (!platform) {
             setError('เลือกแพลตฟอร์มไม่ถูกต้อง'); setLoading(false); return;
         }
-        const cost = Number(keyGenData.tokens);
+        const cost = Number(tokens);
         if (agent.credits < cost) {
             setError(`เครดิตไม่เพียงพอ คุณมี ${agent.credits}, แต่ต้องการ ${cost}`); setLoading(false); return;
         }
@@ -91,6 +93,7 @@ const AgentGenerateKeyPage: React.FC = () => {
 
     return (
         <div className="space-y-6">
+            <PlatformTabs platforms={platforms} selected={selectedPlatformId} onSelect={setSelectedPlatformId} />
             <Card className="max-w-xl">
                 <CardHeader>
                     <CardTitle>{t('generateKeyTitle')}</CardTitle>
@@ -98,19 +101,7 @@ const AgentGenerateKeyPage: React.FC = () => {
                 </CardHeader>
                 <CardContent>
                     <form onSubmit={handleGenerateKey} className="space-y-4">
-                        <div>
-                            <label htmlFor="platform" className="block text-sm font-medium text-slate-700 mb-1.5">แพลตฟอร์ม</label>
-                            <select
-                                id="platform"
-                                value={keyGenData.platformId}
-                                onChange={e => setKeyGenData({ ...keyGenData, platformId: e.target.value })}
-                                className="block w-full px-3 py-1.5 bg-white border border-slate-300 rounded-md text-sm shadow-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                                disabled={platforms.length === 0}
-                            >
-                                {platforms.length > 0 ? platforms.map(p => <option key={p.id} value={p.id}>{p.title}</option>) : <option>ไม่มีแพลตฟอร์ม</option>}
-                            </select>
-                        </div>
-                        <Input label="โทเค็น (1 เครดิต = 1 โทเค็น)" type="number" value={keyGenData.tokens} onChange={e => setKeyGenData({ ...keyGenData, tokens: Number(e.target.value) })} required />
+                        <Input label="โทเค็น (1 เครดิต = 1 โทเค็น)" type="number" value={tokens} onChange={e => setTokens(Number(e.target.value))} required />
                         {error && <p className="text-red-500 text-sm">{error}</p>}
                         <div className="flex justify-end pt-2">
                             <Button type="submit" disabled={platforms.length === 0 || loading}>
