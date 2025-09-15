@@ -12,6 +12,7 @@ import {
   DocumentMagnifyingGlassIcon,
   NoSymbolIcon,
   KeyIcon,
+  UserGroupIcon,
 } from '@heroicons/react/24/outline';
 
 const NavIcon: React.FC<{ children: React.ReactNode }> = ({ children }) => (
@@ -40,6 +41,7 @@ const AgentSidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
     ];
     const navLinks = [
       ...baseLinks,
+      ...(agent?.parentId ? [] : [{ to: '/agents', text: t('agents'), icon: <UserGroupIcon className="w-6 h-6" /> }]),
       ...(agent?.ipBanEnabled ? [{ to: '/ip-bans', text: t('ipBan'), icon: <NoSymbolIcon className="w-6 h-6" /> }] : []),
       { to: '/logs', text: t('logs'), icon: <DocumentMagnifyingGlassIcon className="w-6 h-6" /> },
       { to: '/change-password', text: t('changePassword'), icon: <LockClosedIcon className="w-6 h-6" /> },

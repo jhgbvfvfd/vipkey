@@ -22,6 +22,7 @@ import KeyLogsPage from './pages/KeyLogsPage';
 import IpBanPage from './pages/IpBanPage';
 import AgentMenusPage from './pages/AgentMenusPage';
 import AgentGenerateKeyPage from './pages/AgentGenerateKeyPage';
+import AgentAgentsPage from './pages/AgentAgentsPage';
 import { Agent, Platform, Bot, StandaloneKey, KeyLog } from './types';
 import { getPlatforms, getAgents, getBots, getStandaloneKeys, getKeyLogs } from './services/firebaseService';
 
@@ -36,6 +37,7 @@ interface AuthContextType {
   user: User | null;
   login: (username: string, password?: string) => Promise<'success' | 'banned' | 'invalid'>;
   logout: () => void;
+  updateUserData: (data: Agent) => void;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -226,12 +228,20 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
         setUser(null);
     }, []);
 
+    const updateUserData = useCallback((data: Agent) => {
+        if (!user) return;
+        const newUser: User = { ...user, data };
+        sessionStorage.setItem('user', JSON.stringify(newUser));
+        setUser(newUser);
+    }, [user]);
+
     const authContextValue = useMemo(() => ({
         isAuthenticated: !!user,
         user,
         login,
         logout,
-    }), [user, login, logout]);
+        updateUserData,
+    }), [user, login, logout, updateUserData]);
 
     return (
         <AuthContext.Provider value={authContextValue}>
@@ -304,6 +314,7 @@ const AgentRoutes: React.FC = () => (
         <Route path="/generate-key" element={<AgentGenerateKeyPage />} />
         <Route path="/bots" element={<BotsPage />} />
         <Route path="/profile" element={<AgentProfilePage />} />
+        <Route path="/agents" element={<AgentAgentsPage />} />
         <Route path="/usage" element={<AgentUsagePage />} />
         <Route path="/logs" element={<KeyLogsPage />} />
         <Route path="/ip-bans" element={<IpBanPage />} />
