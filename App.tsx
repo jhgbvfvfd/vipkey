@@ -21,6 +21,7 @@ import AgentUsagePage from './pages/AgentUsagePage';
 import KeyLogsPage from './pages/KeyLogsPage';
 import IpBanPage from './pages/IpBanPage';
 import AgentMenusPage from './pages/AgentMenusPage';
+import AgentGenerateKeyPage from './pages/AgentGenerateKeyPage';
 import { Agent, Platform, Bot, StandaloneKey, KeyLog } from './types';
 import { getPlatforms, getAgents, getBots, getStandaloneKeys, getKeyLogs } from './services/firebaseService';
 
@@ -300,6 +301,7 @@ const AgentRoutes: React.FC = () => (
     <Routes>
         <Route path="/" element={<AgentDashboardPage />} />
         <Route path="/my-keys" element={<AgentKeysPage />} />
+        <Route path="/generate-key" element={<AgentGenerateKeyPage />} />
         <Route path="/bots" element={<BotsPage />} />
         <Route path="/profile" element={<AgentProfilePage />} />
         <Route path="/usage" element={<AgentUsagePage />} />
