@@ -1,6 +1,6 @@
 
 
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useData, useSettings } from '../App';
 import { Agent, Platform, CreditHistoryEntry, ApiKey } from '../types';
 import { addAgent, updateAgent, deleteAgent } from '../services/firebaseService';
@@ -9,17 +9,37 @@ import Card, { CardHeader, CardTitle, CardContent } from '../components/ui/Card'
 import Modal from '../components/ui/Modal';
 import Input from '../components/ui/Input';
 import { MagnifyingGlassIcon } from '@heroicons/react/24/outline';
+import { useExpirationCountdown } from '../hooks/useExpirationCountdown';
+
+interface NewAgentForm {
+    username: string;
+    password: string;
+    credits: number;
+    expirationAt: string;
+}
 
 const AgentCard: React.FC<{
     agent: Agent;
     onViewHistory: (agent: Agent) => void;
     onManageKeys: (agent: Agent) => void;
     onAddCredits: (agent: Agent) => void;
+    onEditExpiration: (agent: Agent) => void;
     onDelete: (agent: Agent) => void;
     onBan: (agent: Agent) => void;
     platforms: Platform[]
-}> = ({ agent, onViewHistory, onManageKeys, onAddCredits, onDelete, onBan, platforms }) => {
-    const platformMap = new Map(platforms.map(p => [p.id, p]));
+}> = ({ agent, onViewHistory, onManageKeys, onAddCredits, onEditExpiration, onDelete, onBan, platforms }) => {
+    const platformMap = useMemo(() => new Map(platforms.map(p => [p.id, p])), [platforms]);
+    const { expirationDate, isExpired, formattedTimeLeft } = useExpirationCountdown(agent.expirationAt);
+    const expirationText = expirationDate ? expirationDate.toLocaleString('th-TH') : 'ไม่มีวันหมดอายุ';
+    const expirationDescription = useMemo(() => {
+        if (!expirationDate) {
+            return 'ไม่มีวันหมดอายุ';
+        }
+        if (isExpired) {
+            return `หมดอายุ: ${expirationText} (บัญชีหมดอายุแล้ว)`;
+        }
+        return `หมดอายุ: ${expirationText} (เหลือเวลา ${formattedTimeLeft})`;
+    }, [expirationDate, expirationText, formattedTimeLeft, isExpired]);
 
     return (
         <Card>
@@ -44,8 +64,18 @@ const AgentCard: React.FC<{
                 </div>
             </CardHeader>
             <CardContent>
+                <p className={`text-xs mb-3 ${isExpired ? 'text-red-600 font-semibold' : 'text-slate-500'}`}>
+                    {expirationDescription}
+                </p>
                 <div className="flex flex-col gap-2 mb-4">
                     <Button onClick={() => onAddCredits(agent)} className="w-full">เติมเครดิต</Button>
+                    <Button
+                        onClick={() => onEditExpiration(agent)}
+                        variant="secondary"
+                        className="w-full"
+                    >
+                        {agent.expirationAt ? 'แก้ไขวันหมดอายุ' : 'ตั้งวันหมดอายุ'}
+                    </Button>
                     <div className="flex flex-col sm:flex-row gap-2">
                         <Button onClick={() => onViewHistory(agent)} variant="secondary" className="w-full">ดูประวัติเครดิต</Button>
                         <Button onClick={() => onManageKeys(agent)} variant="secondary" className="w-full">จัดการคีย์</Button>
@@ -184,11 +214,14 @@ const AgentsPage: React.FC = () => {
     const [isHistoryModalOpen, setHistoryModalOpen] = useState(false);
     const [isKeysModalOpen, setKeysModalOpen] = useState(false);
     const [isAddCreditsModalOpen, setAddCreditsModalOpen] = useState(false);
+    const [isExpirationModalOpen, setExpirationModalOpen] = useState(false);
     const [selectedAgent, setSelectedAgent] = useState<Agent | null>(null);
-    const [newAgentData, setNewAgentData] = useState({ username: '', password: '', credits: 1000 });
+    const [newAgentData, setNewAgentData] = useState<NewAgentForm>({ username: '', password: '', credits: 1000, expirationAt: '' });
     const [creditsToAdd, setCreditsToAdd] = useState(100);
     const [error, setError] = useState('');
     const [query, setQuery] = useState('');
+    const [expirationValue, setExpirationValue] = useState('');
+    const [expirationError, setExpirationError] = useState('');
 
     const handleAddAgent = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -202,10 +235,24 @@ const AgentsPage: React.FC = () => {
             return;
         }
 
+        let expirationIso: string | undefined;
+        if (newAgentData.expirationAt) {
+            const expirationDate = new Date(newAgentData.expirationAt);
+            if (Number.isNaN(expirationDate.getTime())) {
+                setError('รูปแบบวันหมดอายุไม่ถูกต้อง');
+                return;
+            }
+            if (expirationDate.getTime() <= Date.now()) {
+                setError('วันหมดอายุต้องอยู่ในอนาคต');
+                return;
+            }
+            expirationIso = expirationDate.toISOString();
+        }
+
         try {
             const newId = `agent_${Date.now()}`;
             const initialCredits = Number(newAgentData.credits);
-            
+
             const initialHistoryEntry: CreditHistoryEntry = {
                 date: new Date().toISOString(),
                 action: 'เครดิตเริ่มต้น',
@@ -222,10 +269,11 @@ const AgentsPage: React.FC = () => {
                 keys: {},
                 creditHistory: [initialHistoryEntry],
                 status: 'active',
+                expirationAt: expirationIso,
             });
             refreshData();
             setAddAgentModalOpen(false);
-            setNewAgentData({ username: '', password: '', credits: 1000 });
+            setNewAgentData({ username: '', password: '', credits: 1000, expirationAt: '' });
             notify('สร้างตัวแทนเรียบร้อย');
         } catch (err) {
             setError('ไม่สามารถเพิ่มตัวแทนได้');
@@ -243,7 +291,29 @@ const AgentsPage: React.FC = () => {
         setSelectedAgent(agent);
         setKeysModalOpen(true);
     };
-    
+
+    const formatDateTimeLocal = (value: string) => {
+        const date = new Date(value);
+        if (Number.isNaN(date.getTime())) {
+            return '';
+        }
+        const pad = (num: number) => num.toString().padStart(2, '0');
+        return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+    };
+
+    const handleOpenExpiration = (agent: Agent) => {
+        setSelectedAgent(agent);
+        setExpirationValue(agent.expirationAt ? formatDateTimeLocal(agent.expirationAt) : '');
+        setExpirationError('');
+        setExpirationModalOpen(true);
+    };
+
+    const closeExpirationModal = () => {
+        setExpirationModalOpen(false);
+        setExpirationError('');
+        setExpirationValue('');
+    };
+
     const handleOpenAddCredits = (agent: Agent) => {
         setSelectedAgent(agent);
         setCreditsToAdd(100);
@@ -279,7 +349,32 @@ const AgentsPage: React.FC = () => {
         await updateAgent(agent);
         refreshData();
         // Also update the selected agent in state to reflect changes immediately in modal
-        setSelectedAgent(agent); 
+        setSelectedAgent(agent);
+    };
+
+    const handleUpdateExpiration = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!selectedAgent) return;
+        setExpirationError('');
+
+        let expirationIso: string | undefined;
+        if (expirationValue) {
+            const expirationDate = new Date(expirationValue);
+            if (Number.isNaN(expirationDate.getTime())) {
+                setExpirationError('รูปแบบวันหมดอายุไม่ถูกต้อง');
+                return;
+            }
+            if (expirationDate.getTime() <= Date.now()) {
+                setExpirationError('วันหมดอายุต้องอยู่ในอนาคต');
+                return;
+            }
+            expirationIso = expirationDate.toISOString();
+        }
+
+        const updatedAgent = { ...selectedAgent, expirationAt: expirationIso };
+        await handleUpdateAgent(updatedAgent);
+        closeExpirationModal();
+        notify(expirationIso ? 'อัปเดตวันหมดอายุแล้ว' : 'ลบวันหมดอายุแล้ว');
     };
 
     const filteredAgents = agents.filter(a => a.username.toLowerCase().includes(query.toLowerCase()));
@@ -319,6 +414,7 @@ const AgentsPage: React.FC = () => {
                             onViewHistory={handleOpenHistory}
                             onManageKeys={handleOpenKeys}
                             onAddCredits={handleOpenAddCredits}
+                            onEditExpiration={handleOpenExpiration}
                             onBan={handleBanAgent}
                             onDelete={handleDeleteAgent}
                             platforms={platforms}
@@ -333,6 +429,7 @@ const AgentsPage: React.FC = () => {
                     <Input label="ชื่อผู้ใช้" placeholder="เช่น agent_007" value={newAgentData.username} onChange={e => setNewAgentData({...newAgentData, username: e.target.value})} required />
                     <Input label="รหัสผ่าน" type="password" placeholder="ตั้งรหัสผ่านสำหรับตัวแทน" value={newAgentData.password} onChange={e => setNewAgentData({...newAgentData, password: e.target.value})} required />
                     <Input label="เครดิตเริ่มต้น" type="number" placeholder="เช่น 1000" value={newAgentData.credits} onChange={e => setNewAgentData({...newAgentData, credits: Number(e.target.value)})} required />
+                    <Input label="วันหมดอายุ (ไม่บังคับ)" type="datetime-local" value={newAgentData.expirationAt} onChange={e => setNewAgentData({...newAgentData, expirationAt: e.target.value})} />
                     {error && <p className="text-red-500 text-sm">{error}</p>}
                     <div className="flex justify-end gap-3 pt-4">
                         <Button type="button" variant="secondary" onClick={() => setAddAgentModalOpen(false)}>ยกเลิก</Button>
@@ -347,12 +444,42 @@ const AgentsPage: React.FC = () => {
                         <p className="text-sm text-slate-600">เครดิตปัจจุบัน: <span className="font-bold text-blue-600">{selectedAgent?.credits.toLocaleString()}</span></p>
                     </div>
                     <Input label="จำนวนเครดิตที่ต้องการเพิ่ม" type="number" placeholder="เช่น 500" value={creditsToAdd} onChange={e => setCreditsToAdd(Number(e.target.value))} required />
-                    
+
                     <div className="flex justify-end gap-3 pt-4">
                         <Button type="button" variant="secondary" onClick={() => setAddCreditsModalOpen(false)}>ยกเลิก</Button>
                         <Button type="submit">ยืนยันการเติม</Button>
                     </div>
                  </form>
+            </Modal>
+
+            <Modal
+                isOpen={isExpirationModalOpen}
+                onClose={closeExpirationModal}
+                title={`กำหนดวันหมดอายุ: ${selectedAgent?.username ?? ''}`}
+            >
+                <form onSubmit={handleUpdateExpiration} className="space-y-4">
+                    <Input
+                        label="วันหมดอายุ"
+                        type="datetime-local"
+                        value={expirationValue}
+                        onChange={e => setExpirationValue(e.target.value)}
+                    />
+                    {expirationError && <p className="text-red-500 text-sm">{expirationError}</p>}
+                    <div className="flex flex-col sm:flex-row justify-end gap-2 pt-2">
+                        <Button
+                            type="button"
+                            variant="secondary"
+                            onClick={() => setExpirationValue('')}
+                            className="w-full sm:w-auto"
+                        >
+                            ลบวันหมดอายุ
+                        </Button>
+                        <div className="flex gap-2 justify-end w-full sm:w-auto">
+                            <Button type="button" variant="secondary" onClick={closeExpirationModal}>ยกเลิก</Button>
+                            <Button type="submit">บันทึก</Button>
+                        </div>
+                    </div>
+                </form>
             </Modal>
 
             <Modal isOpen={isHistoryModalOpen} onClose={() => setHistoryModalOpen(false)} title={`ประวัติเครดิต: ${selectedAgent?.username}`}>

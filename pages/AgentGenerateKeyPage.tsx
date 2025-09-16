@@ -7,7 +7,7 @@ import Button from '../components/ui/Button';
 import Card, { CardHeader, CardTitle, CardContent } from '../components/ui/Card';
 import Modal from '../components/ui/Modal';
 import Input from '../components/ui/Input';
-import PlatformTabs from '../components/ui/PlatformTabs';
+import Select from '../components/ui/Select';
 
 const AgentGenerateKeyPage: React.FC = () => {
     const { platforms, refreshData } = useData();
@@ -92,8 +92,7 @@ const AgentGenerateKeyPage: React.FC = () => {
     };
 
     return (
-        <div className="space-y-6">
-            <PlatformTabs platforms={platforms} selected={selectedPlatformId} onSelect={setSelectedPlatformId} />
+    <div className="space-y-6">
             <Card className="max-w-xl">
                 <CardHeader>
                     <CardTitle>{t('generateKeyTitle')}</CardTitle>
@@ -101,6 +100,18 @@ const AgentGenerateKeyPage: React.FC = () => {
                 </CardHeader>
                 <CardContent>
                     <form onSubmit={handleGenerateKey} className="space-y-4">
+                        <Select
+                            label="แพลตฟอร์ม"
+                            value={selectedPlatformId}
+                            onChange={e => setSelectedPlatformId(e.target.value)}
+                            disabled={platforms.length === 0}
+                            required
+                        >
+                            <option value="" disabled>เลือกแพลตฟอร์ม</option>
+                            {platforms.map(platform => (
+                                <option key={platform.id} value={platform.id}>{platform.title}</option>
+                            ))}
+                        </Select>
                         <Input label="โทเค็น (1 เครดิต = 1 โทเค็น)" type="number" value={tokens} onChange={e => setTokens(Number(e.target.value))} required />
                         {error && <p className="text-red-500 text-sm">{error}</p>}
                         <div className="flex justify-end pt-2">

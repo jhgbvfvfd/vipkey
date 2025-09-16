@@ -2,7 +2,7 @@
 import React, { useState, useCallback, useMemo, createContext, useContext, useEffect } from 'react';
 import { Toaster, toast } from 'react-hot-toast';
 import { translations, Language } from './utils/i18n';
-import { HashRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
+import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
 import LoginPage from './pages/LoginPage';
 import Layout from './components/layout/Layout';
 import DashboardPage from './pages/DashboardPage';
@@ -26,7 +26,7 @@ import AgentMenusPage from './pages/AgentMenusPage';
 import AgentGenerateKeyPage from './pages/AgentGenerateKeyPage';
 import AgentAgentsPage from './pages/AgentAgentsPage';
 import { Agent, Platform, Bot, StandaloneKey, KeyLog } from './types';
-import { getPlatforms, getAgents, getBots, getStandaloneKeys, getKeyLogs } from './services/firebaseService';
+import { getPlatforms, getAgents, getBots, getStandaloneKeys, getKeyLogs, deleteAgent } from './services/firebaseService';
 
 type UserRole = 'admin' | 'agent';
 interface User {
@@ -150,8 +150,10 @@ const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
     const [keyLogs, setKeyLogs] = useState<KeyLog[]>([]);
     const [loading, setLoading] = useState(true);
 
-    const fetchData = useCallback(async () => {
-        setLoading(true);
+    const fetchData = useCallback(async ({ showLoading = false }: { showLoading?: boolean } = {}) => {
+        if (showLoading) {
+            setLoading(true);
+        }
         try {
             const [platformsData, agentsData, botsData, keysData, logsData] = await Promise.all([
                 getPlatforms(),
@@ -173,8 +175,17 @@ const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
     }, []);
 
     useEffect(() => {
-        fetchData();
+        fetchData({ showLoading: true });
     }, [fetchData]);
+
+    useEffect(() => {
+        const intervalId = window.setInterval(() => {
+            fetchData();
+        }, 30000);
+        return () => window.clearInterval(intervalId);
+    }, [fetchData]);
+
+    const refreshData = useCallback(() => fetchData({ showLoading: true }), [fetchData]);
 
     const value = useMemo(() => ({
         agents,
@@ -183,8 +194,8 @@ const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
         standaloneKeys,
         keyLogs,
         loading,
-        refreshData: fetchData,
-    }), [agents, platforms, bots, standaloneKeys, keyLogs, loading, fetchData]);
+        refreshData,
+    }), [agents, platforms, bots, standaloneKeys, keyLogs, loading, refreshData]);
     
     return <DataContext.Provider value={value}>{children}</DataContext.Provider>;
 };
@@ -236,6 +247,43 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
         sessionStorage.setItem('user', JSON.stringify(newUser));
         setUser(newUser);
     }, [user]);
+
+    useEffect(() => {
+        if (user?.role !== 'agent') return;
+        const agent = user.data as Agent;
+        if (!agent.expirationAt) return;
+
+        const expiration = new Date(agent.expirationAt);
+        const expirationTime = expiration.getTime();
+        if (Number.isNaN(expirationTime)) return;
+
+        const timeLeft = expirationTime - Date.now();
+
+        if (timeLeft <= 0) {
+            (async () => {
+                try {
+                    await deleteAgent(agent.id);
+                } catch (error) {
+                    console.error('Failed to delete expired agent during logout:', error);
+                }
+                logout();
+            })();
+            return;
+        }
+
+        const timeoutId = window.setTimeout(async () => {
+            try {
+                await deleteAgent(agent.id);
+            } catch (error) {
+                console.error('Failed to delete expired agent during logout:', error);
+            }
+            logout();
+        }, timeLeft);
+
+        return () => {
+            window.clearTimeout(timeoutId);
+        };
+    }, [user, logout]);
 
     const authContextValue = useMemo(() => ({
         isAuthenticated: !!user,
