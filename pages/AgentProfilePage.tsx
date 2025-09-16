@@ -15,6 +15,11 @@ const AgentProfilePage: React.FC = () => {
         </CardHeader>
         <CardContent>
           <p className="text-slate-600 text-sm">เครดิตคงเหลือ: <span className="font-medium text-blue-600">{agent.credits.toLocaleString()}</span></p>
+          <p className="text-slate-500 text-sm mt-2">
+            {agent.expirationAt
+              ? `บัญชีหมดอายุ: ${new Date(agent.expirationAt).toLocaleString('th-TH')}`
+              : 'บัญชีนี้ไม่มีวันหมดอายุ'}
+          </p>
         </CardContent>
       </Card>
     </div>

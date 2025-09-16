@@ -63,7 +63,25 @@ export const deletePlatform = async(platformId: string): Promise<void> => {
 
 export const getAgents = async (): Promise<Agent[]> => {
     const data = await fetchData<Record<string, Omit<Agent, 'id'>>>('agents');
-    return firebaseObjectToArray(data);
+    const agents = firebaseObjectToArray(data);
+    const now = Date.now();
+    const expiredAgents = agents.filter(agent => {
+        if (!agent.expirationAt) return false;
+        const expirationTime = new Date(agent.expirationAt).getTime();
+        return !Number.isNaN(expirationTime) && expirationTime <= now;
+    });
+
+    if (expiredAgents.length > 0) {
+        await Promise.all(
+            expiredAgents.map(agent =>
+                deleteData(`agents/${agent.id}`).catch(error => {
+                    console.error(`Failed to delete expired agent ${agent.id}:`, error);
+                })
+            )
+        );
+    }
+
+    return agents.filter(agent => !expiredAgents.some(expired => expired.id === agent.id));
 };
 
 export const addAgent = async (agent: Omit<Agent, 'id'> & {id: string}): Promise<void> => {
