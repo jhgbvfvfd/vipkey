@@ -25,6 +25,7 @@ import IpBanPage from './pages/IpBanPage';
 import AgentMenusPage from './pages/AgentMenusPage';
 import AgentGenerateKeyPage from './pages/AgentGenerateKeyPage';
 import AgentAgentsPage from './pages/AgentAgentsPage';
+import WelcomeOverlay from './components/ui/WelcomeOverlay';
 import { Agent, Platform, Bot, StandaloneKey, KeyLog } from './types';
 import { getPlatforms, getAgents, getBots, getStandaloneKeys, getKeyLogs, deleteAgent } from './services/firebaseService';
 
@@ -304,6 +305,7 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
 const App: React.FC = () => {
   return (
     <SettingsProvider>
+      <WelcomeOverlay />
       <AuthProvider>
         <DataProvider>
           <AppRoutes />
