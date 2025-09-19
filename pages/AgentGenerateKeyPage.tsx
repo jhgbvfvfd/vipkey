@@ -18,6 +18,8 @@ const AgentGenerateKeyPage: React.FC = () => {
     const [isKeyModalOpen, setKeyModalOpen] = useState(false);
     const [generatedKey, setGeneratedKey] = useState('');
     const [selectedPlatformId, setSelectedPlatformId] = useState(platforms[0]?.id || '');
+    const MIN_TOKENS = 1;
+    const MAX_TOKENS = 1000;
     const [tokens, setTokens] = useState(100);
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
@@ -47,6 +49,11 @@ const AgentGenerateKeyPage: React.FC = () => {
             setError('เลือกแพลตฟอร์มไม่ถูกต้อง'); setLoading(false); return;
         }
         const cost = Number(tokens);
+        if (!Number.isFinite(cost) || cost < MIN_TOKENS || cost > MAX_TOKENS) {
+            setError(`กำหนดโทเค็นได้ระหว่าง ${MIN_TOKENS} - ${MAX_TOKENS}`);
+            setLoading(false);
+            return;
+        }
         if (agent.credits < cost) {
             setError(`เครดิตไม่เพียงพอ คุณมี ${agent.credits}, แต่ต้องการ ${cost}`); setLoading(false); return;
         }
@@ -101,7 +108,16 @@ const AgentGenerateKeyPage: React.FC = () => {
                 </CardHeader>
                 <CardContent>
                     <form onSubmit={handleGenerateKey} className="space-y-4">
-                        <Input label="โทเค็น (1 เครดิต = 1 โทเค็น)" type="number" value={tokens} onChange={e => setTokens(Number(e.target.value))} required />
+                        <Input
+                            label={`โทเค็น (1 เครดิต = 1 โทเค็น, ${MIN_TOKENS} - ${MAX_TOKENS})`}
+                            type="number"
+                            min={MIN_TOKENS}
+                            max={MAX_TOKENS}
+                            step={1}
+                            value={tokens}
+                            onChange={e => setTokens(Number(e.target.value))}
+                            required
+                        />
                         {error && <p className="text-red-500 text-sm">{error}</p>}
                         <div className="flex justify-end pt-2">
                             <Button type="submit" disabled={platforms.length === 0 || loading}>
