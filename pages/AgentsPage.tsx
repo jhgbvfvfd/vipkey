@@ -242,6 +242,7 @@ const AgentsPage: React.FC = () => {
                 keys: {},
                 creditHistory: [initialHistoryEntry],
                 status: 'active',
+                welcomeAcknowledged: false,
             });
             refreshData();
             setAddAgentModalOpen(false);

@@ -63,6 +63,7 @@ const AgentAgentsPage: React.FC = () => {
       creditHistory: [childHistory],
       status: 'active',
       parentId: parent.id,
+      welcomeAcknowledged: false,
     });
     const updatedParent: Agent = {
       ...parent,
