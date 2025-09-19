@@ -14,9 +14,6 @@ import {
     PauseIcon,
     PlayIcon,
     TrashIcon,
-    SparklesIcon,
-    ShieldCheckIcon,
-    BoltIcon,
 } from '@heroicons/react/24/outline';
 
 const KeyRow: React.FC<{ 
@@ -212,39 +209,6 @@ const GenerateKeyPage: React.FC = () => {
 
     return (
         <div className="space-y-6">
-            <div className="rounded-3xl bg-gradient-to-r from-slate-900 via-slate-800 to-slate-700 p-6 text-white shadow-lg sm:p-8 overflow-hidden">
-                <p className="text-xs uppercase tracking-[0.45em] text-blue-200/90">ADMIN BOT</p>
-                <h1 className="mt-2 text-3xl font-black sm:text-4xl">
-                    <span className="block text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-blue-400 to-sky-500">CSCODE</span>
-                </h1>
-                <p className="mt-4 max-w-2xl text-sm text-slate-200/90">
-                    ศูนย์ควบคุมการสร้างคีย์ที่ออกแบบมาเพื่อให้คุณทำงานได้รวดเร็วในทุกอุปกรณ์
-                </p>
-                <div className="mt-6 grid gap-3 text-sm sm:grid-cols-3">
-                    <div className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 p-3">
-                        <ShieldCheckIcon className="h-6 w-6 text-cyan-300" />
-                        <div>
-                            <p className="font-semibold">ความปลอดภัยเต็มระดับ</p>
-                            <p className="text-xs text-slate-200/80">ควบคุมสถานะคีย์อย่างละเอียดได้ทุกเวลา</p>
-                        </div>
-                    </div>
-                    <div className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 p-3">
-                        <BoltIcon className="h-6 w-6 text-sky-300" />
-                        <div>
-                            <p className="font-semibold">สร้างคีย์รวดเร็ว</p>
-                            <p className="text-xs text-slate-200/80">เลือกแพลตฟอร์มแล้วเริ่มสร้างทันที</p>
-                        </div>
-                    </div>
-                    <div className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 p-3">
-                        <SparklesIcon className="h-6 w-6 text-blue-200" />
-                        <div>
-                            <p className="font-semibold">ประสบการณ์ลื่นไหล</p>
-                            <p className="text-xs text-slate-200/80">ดีไซน์ที่เหมาะกับมือถือและเดสก์ท็อป</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
             <div className="md:hidden">
                 <div className="flex items-center rounded-full border border-slate-200 bg-white p-1 text-sm font-medium text-slate-500 shadow-sm">
                     <button
@@ -261,33 +225,42 @@ const GenerateKeyPage: React.FC = () => {
                     </button>
                 </div>
             </div>
+            <div className="grid gap-6 md:grid-cols-2 md:items-start">
+                <div className={`${activeMenu === 'create' ? 'block' : 'hidden'} md:block`}>
+                    <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-md space-y-6">
+                        <div className="space-y-2">
+                            <p className="text-xs uppercase tracking-[0.45em] text-blue-500 font-semibold animate-fade-up">ADMIN BOT</p>
+                            <h1 className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-500 via-sky-500 to-cyan-400 animate-gradient-x">CSCODE</h1>
+                            <p className="text-sm text-slate-500">
+                                ศูนย์ควบคุมการสร้างคีย์ที่ออกแบบมาเพื่อให้คุณทำงานได้รวดเร็วในทุกอุปกรณ์
+                            </p>
+                        </div>
 
-            <div className="grid gap-6 md:grid-cols-2">
-                <div className={`${activeMenu === 'create' ? 'block' : 'hidden'} md:block`}> 
-                    <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-                        <div className="flex flex-col gap-3">
-                            <div>
+                        <div className="rounded-2xl border border-slate-100 bg-white/80 p-4 shadow-inner">
+                            <div className="space-y-3">
                                 <p className="text-xs uppercase tracking-[0.3em] text-blue-500 font-semibold">เลือกแพลตฟอร์ม</p>
                                 <h2 className="text-lg font-semibold text-slate-800">เลือกแพลตฟอร์มสำหรับสร้างคีย์ของคุณ</h2>
-                            </div>
-                            <PlatformTabs platforms={platforms} selected={selectedPlatformId} onSelect={setSelectedPlatformId} />
-                        </div>
-                    </div>
-
-                    <Card className="mt-4">
-                        <CardHeader>
-                            <CardTitle>สร้างคีย์ใหม่</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <form onSubmit={handleGenerateKey} className="space-y-4">
-                                <Input label="โทเค็น" type="number" value={tokens} onChange={e => setTokens(Number(e.target.value))} required />
-                                {error && <p className="text-red-500 text-sm">{error}</p>}
-                                <div className="flex justify-end pt-2">
-                                    <Button type="submit" disabled={platforms.length === 0}>สร้าง</Button>
+                                <div className="pt-1">
+                                    <PlatformTabs platforms={platforms} selected={selectedPlatformId} onSelect={setSelectedPlatformId} />
                                 </div>
-                            </form>
-                        </CardContent>
-                    </Card>
+                            </div>
+                        </div>
+
+                        <Card className="shadow-md">
+                            <CardHeader className="bg-slate-50/80">
+                                <CardTitle>สร้างคีย์ใหม่</CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <form onSubmit={handleGenerateKey} className="space-y-4">
+                                    <Input label="โทเค็น" type="number" value={tokens} onChange={e => setTokens(Number(e.target.value))} required />
+                                    {error && <p className="text-red-500 text-sm">{error}</p>}
+                                    <div className="flex justify-end pt-2">
+                                        <Button type="submit" disabled={platforms.length === 0}>สร้าง</Button>
+                                    </div>
+                                </form>
+                            </CardContent>
+                        </Card>
+                    </div>
                 </div>
 
                 <div className={`${activeMenu === 'manage' ? 'block' : 'hidden'} md:block`}>
