@@ -7,7 +7,7 @@ import Button from '../components/ui/Button';
 import Card, { CardHeader, CardTitle, CardContent } from '../components/ui/Card';
 import Modal from '../components/ui/Modal';
 import Input from '../components/ui/Input';
-import PlatformTabs from '../components/ui/PlatformTabs';
+import PlatformSelector from '../components/ui/PlatformSelector';
 import { ClipboardIcon, CheckIcon } from '@heroicons/react/24/outline';
 
 const GenerateKeyPage: React.FC = () => {
@@ -72,21 +72,31 @@ const GenerateKeyPage: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <PlatformTabs platforms={platforms} selected={selectedPlatformId} onSelect={setSelectedPlatformId} />
-      <Card className="max-w-xl">
+      <Card>
         <CardHeader>
-          <CardTitle>สร้างคีย์ใหม่</CardTitle>
+          <CardTitle>เลือกแพลตฟอร์ม</CardTitle>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleGenerateKey} className="space-y-4">
-            <Input label="โทเค็น" type="number" value={tokens} onChange={e => setTokens(Number(e.target.value))} required />
-            {error && <p className="text-red-500 text-sm">{error}</p>}
-            <div className="flex justify-end pt-2">
-              <Button type="submit" disabled={platforms.length === 0}>สร้าง</Button>
-            </div>
-          </form>
+          <PlatformSelector platforms={platforms} selected={selectedPlatformId} onSelect={setSelectedPlatformId} />
         </CardContent>
       </Card>
+
+      {selectedPlatformId && (
+        <Card>
+          <CardHeader>
+            <CardTitle>สร้างคีย์ใหม่สำหรับ {platforms.find(p => p.id === selectedPlatformId)?.title}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleGenerateKey} className="space-y-4">
+              <Input label="โทเค็น" type="number" value={tokens} onChange={e => setTokens(Number(e.target.value))} required />
+              {error && <p className="text-red-500 text-sm">{error}</p>}
+              <div className="flex justify-end pt-2">
+                <Button type="submit" disabled={!selectedPlatformId}>สร้าง</Button>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
+      )}
 
       <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="สร้างคีย์สำเร็จ">
         <div>

@@ -7,7 +7,7 @@ import Button from '../components/ui/Button';
 import Card, { CardHeader, CardTitle, CardContent } from '../components/ui/Card';
 import Modal from '../components/ui/Modal';
 import Input from '../components/ui/Input';
-import PlatformTabs from '../components/ui/PlatformTabs';
+import PlatformSelector from '../components/ui/PlatformSelector';
 
 const AgentGenerateKeyPage: React.FC = () => {
     const { platforms, refreshData } = useData();
@@ -93,24 +93,34 @@ const AgentGenerateKeyPage: React.FC = () => {
 
     return (
         <div className="space-y-6">
-            <PlatformTabs platforms={platforms} selected={selectedPlatformId} onSelect={setSelectedPlatformId} />
-            <Card className="max-w-xl">
+            <Card>
                 <CardHeader>
-                    <CardTitle>{t('generateKeyTitle')}</CardTitle>
-                    <p className="text-sm text-slate-500 mt-1">เครดิตของคุณจะถูกใช้เพื่อสร้างคีย์สำหรับแพลตฟอร์มที่เลือก</p>
+                    <CardTitle>เลือกแพลตฟอร์ม</CardTitle>
                 </CardHeader>
                 <CardContent>
-                    <form onSubmit={handleGenerateKey} className="space-y-4">
-                        <Input label="โทเค็น (1 เครดิต = 1 โทเค็น)" type="number" value={tokens} onChange={e => setTokens(Number(e.target.value))} required />
-                        {error && <p className="text-red-500 text-sm">{error}</p>}
-                        <div className="flex justify-end pt-2">
-                            <Button type="submit" disabled={platforms.length === 0 || loading}>
-                                {loading ? "กำลังสร้าง..." : "สร้างคีย์"}
-                            </Button>
-                        </div>
-                    </form>
+                    <PlatformSelector platforms={platforms} selected={selectedPlatformId} onSelect={setSelectedPlatformId} />
                 </CardContent>
             </Card>
+
+            {selectedPlatformId && (
+                <Card>
+                    <CardHeader>
+                        <CardTitle>สร้างคีย์ใหม่สำหรับ {platforms.find(p => p.id === selectedPlatformId)?.title}</CardTitle>
+                        <p className="text-sm text-slate-500 mt-1">เครดิตของคุณจะถูกใช้เพื่อสร้างคีย์สำหรับแพลตฟอร์มที่เลือก</p>
+                    </CardHeader>
+                    <CardContent>
+                        <form onSubmit={handleGenerateKey} className="space-y-4">
+                            <Input label="โทเค็น (1 เครดิต = 1 โทเค็น)" type="number" value={tokens} onChange={e => setTokens(Number(e.target.value))} required />
+                            {error && <p className="text-red-500 text-sm">{error}</p>}
+                            <div className="flex justify-end pt-2">
+                                <Button type="submit" disabled={!selectedPlatformId || loading}>
+                                    {loading ? "กำลังสร้าง..." : "สร้างคีย์"}
+                                </Button>
+                            </div>
+                        </form>
+                    </CardContent>
+                </Card>
+            )}
 
             <Modal isOpen={isKeyModalOpen} onClose={() => setKeyModalOpen(false)} title="สร้างคีย์สำเร็จ!">
                 <div>
