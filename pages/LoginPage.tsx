@@ -90,7 +90,7 @@ const LoginPage: React.FC = () => {
               onClick={handleHideHeroMessage}
               className="mt-5 text-xs font-medium text-slate-300 underline-offset-4 transition hover:text-slate-100 hover:underline"
             >
-              ซ่อนข้อความนี้
+              ลบข้อความนี้
             </button>
           </div>
         )}
