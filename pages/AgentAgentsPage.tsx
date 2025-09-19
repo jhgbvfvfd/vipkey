@@ -156,14 +156,14 @@ const AgentAgentsPage: React.FC = () => {
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {myAgents.map(a => (
             <Card key={a.id}>
-              <CardHeader className="flex justify-between items-start">
-                <div>
-                  <CardTitle className={a.status === 'banned' ? 'text-red-600' : undefined}>{a.username}</CardTitle>
-                  <p className="text-xs text-slate-400 font-mono mt-1">{a.id}</p>
+              <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                <div className="min-w-0">
+                  <CardTitle className={`${a.status === 'banned' ? 'text-red-600' : ''} break-words`}>{a.username}</CardTitle>
+                  <p className="mt-1 text-xs font-mono text-slate-400 break-all">{a.id}</p>
                 </div>
-                <div className="text-right">
-                  <p className="text-xl font-bold text-blue-600">{a.credits.toLocaleString()}</p>
-                  <p className="text-xs text-slate-500">เครดิต</p>
+                <div className="min-w-0 text-left sm:text-right">
+                  <p className="text-lg font-bold leading-tight text-blue-600 break-words sm:text-xl">{a.credits.toLocaleString()}</p>
+                  <p className="text-xs text-slate-500 sm:whitespace-nowrap">เครดิต</p>
                 </div>
               </CardHeader>
               <CardContent>

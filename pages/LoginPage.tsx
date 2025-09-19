@@ -64,7 +64,7 @@ const LoginPage: React.FC = () => {
             <CardTitle className="text-2xl font-bold">{t('login')}</CardTitle>
             <p className="text-slate-500 mt-1">{t('login')}</p>
             <p className="mt-3 text-xs text-blue-600">
-              บัญชีผู้ดูแลระบบใช้ชื่อผู้ใช้ <span className="font-semibold text-slate-800">admin</span> และสามารถเปลี่ยนได้เฉพาะรหัสผ่าน
+              โปรดเข้าสู่ระบบด้วยข้อมูลที่ได้รับมอบหมายและเก็บรักษาความปลอดภัยของบัญชีไว้เสมอ
             </p>
           </div>
         </CardHeader>
