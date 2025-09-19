@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useId } from 'react';
 import { CheckCircleIcon, SparklesIcon } from '@heroicons/react/24/solid';
 import { Platform } from '../../types';
 import { normalizePattern } from '../../utils/keyGenerator';
@@ -64,6 +64,8 @@ const PlatformTabs: React.FC<PlatformTabsProps> = ({ platforms, selected, onSele
     );
   }
 
+  const groupName = useId();
+
   return (
     <fieldset className="space-y-4">
       <legend className="text-xs font-semibold uppercase tracking-[0.35em] text-slate-500">เลือกแพลตฟอร์ม</legend>
@@ -79,20 +81,26 @@ const PlatformTabs: React.FC<PlatformTabsProps> = ({ platforms, selected, onSele
           const normalizedPattern = normalizePattern(platform.pattern);
           const patternDescription = describePattern(normalizedPattern);
           const exampleKey = createExampleKey(platform.prefix, normalizedPattern);
+          const inputId = `${groupName}-${platform.id}`;
 
           return (
-            <button
+            <label
               key={platform.id}
-              type="button"
-              role="radio"
-              aria-checked={isSelected}
-              onClick={() => onSelect(platform.id)}
-              className={`group relative flex h-full w-full cursor-pointer overflow-hidden rounded-2xl border bg-white/80 p-5 text-left shadow-sm transition-all duration-300 outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-white ${
+              className={`group relative flex h-full w-full cursor-pointer overflow-hidden rounded-2xl border bg-white/80 p-5 text-left shadow-sm transition-all duration-300 focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-offset-white ${
                 isSelected
                   ? `border-transparent ${variant.ring}`
                   : 'border-slate-200/70 hover:-translate-y-0.5 hover:border-slate-300/70 hover:shadow-[0_20px_45px_-25px_rgba(15,23,42,0.25)]'
               }`}
             >
+              <input
+                id={inputId}
+                type="radio"
+                name={groupName}
+                value={platform.id}
+                checked={isSelected}
+                onChange={() => onSelect(platform.id)}
+                className="sr-only"
+              />
               <span
                 aria-hidden
                 className={`pointer-events-none absolute inset-0 bg-gradient-to-br transition-opacity duration-500 ${
@@ -166,7 +174,7 @@ const PlatformTabs: React.FC<PlatformTabsProps> = ({ platforms, selected, onSele
                   </span>
                 </div>
               </div>
-            </button>
+            </label>
           );
         })}
       </div>
