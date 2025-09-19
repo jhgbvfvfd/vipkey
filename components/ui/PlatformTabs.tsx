@@ -40,16 +40,16 @@ const PlatformTabs: React.FC<PlatformTabsProps> = ({ platforms, selected, onSele
     <div className="relative" ref={containerRef}>
       <button
         onClick={() => setIsOpen(prev => !prev)}
-        className="group flex w-full items-center justify-between gap-3 rounded-2xl border border-blue-100 bg-white/90 px-4 py-3 text-left text-sm font-semibold text-slate-800 shadow-lg shadow-blue-100/30 transition-all hover:-translate-y-0.5 hover:shadow-xl focus:outline-none"
+        className="flex w-full items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3 text-left text-sm font-semibold text-slate-800 transition-colors hover:bg-slate-50 focus:outline-none"
       >
         <span className="flex flex-col">
-          <span className="text-xs font-medium uppercase tracking-[0.25em] text-blue-500/80">แพลตฟอร์มที่เลือก</span>
+          <span className="text-xs font-medium uppercase tracking-[0.2em] text-blue-500/80">แพลตฟอร์มที่เลือก</span>
           <span className="mt-0.5 flex items-center gap-2 text-base text-slate-900">
-            <span className="inline-flex h-2 w-2 rounded-full bg-blue-400/80 shadow-[0_0_8px_rgba(59,130,246,0.6)]"></span>
+            <span className="inline-flex h-1.5 w-1.5 rounded-full bg-blue-400"></span>
             {selectedPlatform.title}
           </span>
         </span>
-        <span className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-sky-500 to-indigo-500 text-white shadow-lg shadow-sky-500/40 transition-transform group-hover:scale-105">
+        <span className="flex h-8 w-8 items-center justify-center rounded-full border border-slate-200 bg-slate-50 text-slate-500 transition-transform">
           <svg
             className={`h-4 w-4 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
             fill="none"
@@ -63,7 +63,7 @@ const PlatformTabs: React.FC<PlatformTabsProps> = ({ platforms, selected, onSele
       </button>
 
       {isOpen && (
-        <div className="absolute z-20 mt-2 w-full min-w-[220px] overflow-hidden rounded-2xl border border-blue-100 bg-white/95 shadow-2xl shadow-blue-200/40 backdrop-blur">
+        <div className="absolute z-20 mt-2 w-full min-w-[220px] overflow-hidden rounded-xl border border-slate-200 bg-white shadow-lg">
           <div className="max-h-60 overflow-y-auto py-2">
             {platforms.map(platform => {
               const isSelected = platform.id === selectedPlatform.id;
@@ -71,13 +71,13 @@ const PlatformTabs: React.FC<PlatformTabsProps> = ({ platforms, selected, onSele
                 <button
                   key={platform.id}
                   onClick={() => handleSelect(platform.id)}
-                  className={`relative flex w-full items-center gap-3 px-4 py-2 text-left text-sm transition-all duration-150 ${
+                  className={`relative flex w-full items-center gap-3 px-4 py-2 text-left text-sm transition-colors ${
                     isSelected
-                      ? 'bg-gradient-to-r from-sky-500/10 via-blue-500/10 to-indigo-500/10 text-sky-700'
-                      : 'text-slate-600 hover:bg-slate-100/80 hover:text-slate-900'
+                      ? 'bg-slate-100 text-slate-900'
+                      : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
                   }`}
                 >
-                  <span className="inline-flex h-2 w-2 rounded-full bg-blue-400/80 shadow-[0_0_8px_rgba(59,130,246,0.6)]"></span>
+                  <span className="inline-flex h-1.5 w-1.5 rounded-full bg-blue-400"></span>
                   <span className="flex flex-col">
                     <span className="font-semibold">{platform.title}</span>
                     {platform.description && (
@@ -85,7 +85,7 @@ const PlatformTabs: React.FC<PlatformTabsProps> = ({ platforms, selected, onSele
                     )}
                   </span>
                   {isSelected && (
-                    <span className="ml-auto inline-flex h-6 w-6 items-center justify-center rounded-full bg-gradient-to-br from-sky-500 to-indigo-500 text-white shadow-inner">
+                    <span className="ml-auto inline-flex h-6 w-6 items-center justify-center rounded-full bg-blue-500 text-white">
                       <svg
                         className="h-3.5 w-3.5"
                         fill="none"

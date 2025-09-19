@@ -126,6 +126,7 @@ const GenerateKeyPage: React.FC = () => {
     const [keyToDelete, setKeyToDelete] = useState<StandaloneKey | null>(null);
     const [generatedKey, setGeneratedKey] = useState('');
     const [selectedPlatformId, setSelectedPlatformId] = useState(platforms[0]?.id || '');
+    const [activeMenu, setActiveMenu] = useState<'create' | 'manage'>('create');
     const [tokens, setTokens] = useState(100);
     const [error, setError] = useState('');
 
@@ -158,6 +159,7 @@ const GenerateKeyPage: React.FC = () => {
             refreshData();
             setGeneratedKey(newKeyString);
             setIsModalOpen(true);
+            setActiveMenu('manage');
             notify('สร้างคีย์เรียบร้อย');
         } catch (err) {
             setError('ไม่สามารถสร้างคีย์ได้');
@@ -210,102 +212,115 @@ const GenerateKeyPage: React.FC = () => {
 
     return (
         <div className="space-y-6">
-            <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#050818] via-[#0f172a] to-[#1e3a8a] text-white shadow-2xl shadow-blue-900/40">
-                <div className="absolute inset-0 opacity-60 bg-[radial-gradient(circle_at_top,_rgba(59,130,246,0.35),_transparent_70%)]"></div>
-                <div className="absolute -top-20 -right-24 h-44 w-44 rounded-full bg-sky-500/40 blur-3xl animate-float"></div>
-                <div className="absolute -bottom-24 -left-10 h-52 w-52 rounded-full bg-blue-400/30 blur-3xl animate-float [animation-delay:1.5s]"></div>
-                <div className="relative z-10 px-6 py-8 sm:px-10">
-                    <p className="text-xs uppercase tracking-[0.6em] text-blue-200/80">ADMIN BOT</p>
-                    <h1 className="mt-2 text-3xl font-black sm:text-4xl">
-                        <span className="block text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-blue-400 to-sky-500 animate-gradient-x">CSCODE</span>
-                    </h1>
-                    <p className="mt-4 max-w-2xl text-sm text-slate-200/90">
-                        ศูนย์ควบคุมการสร้างคีย์ที่ออกแบบมาเพื่อให้คุณจัดการแพลตฟอร์มได้อย่างเหนือระดับ พร้อมเอฟเฟกต์และประสบการณ์ที่ลื่นไหลในทุกขั้นตอน
-                    </p>
-                    <div className="mt-6 grid gap-3 text-sm sm:grid-cols-3">
-                        <div className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/10 p-3 backdrop-blur">
-                            <ShieldCheckIcon className="h-6 w-6 text-cyan-300" />
-                            <div>
-                                <p className="font-semibold">ความปลอดภัยเต็มระดับ</p>
-                                <p className="text-xs text-slate-200/80">มั่นใจด้วยการควบคุมสถานะคีย์อย่างละเอียด</p>
-                            </div>
+            <div className="rounded-3xl bg-gradient-to-r from-slate-900 via-slate-800 to-slate-700 p-6 text-white shadow-lg sm:p-8">
+                <p className="text-xs uppercase tracking-[0.45em] text-blue-200/90">ADMIN BOT</p>
+                <h1 className="mt-2 text-3xl font-black sm:text-4xl">
+                    <span className="block text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-blue-400 to-sky-500">CSCODE</span>
+                </h1>
+                <p className="mt-4 max-w-2xl text-sm text-slate-200/90">
+                    ศูนย์ควบคุมการสร้างคีย์ที่ออกแบบมาเพื่อให้คุณทำงานได้รวดเร็วในทุกอุปกรณ์
+                </p>
+                <div className="mt-6 grid gap-3 text-sm sm:grid-cols-3">
+                    <div className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 p-3">
+                        <ShieldCheckIcon className="h-6 w-6 text-cyan-300" />
+                        <div>
+                            <p className="font-semibold">ความปลอดภัยเต็มระดับ</p>
+                            <p className="text-xs text-slate-200/80">ควบคุมสถานะคีย์อย่างละเอียดได้ทุกเวลา</p>
                         </div>
-                        <div className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/10 p-3 backdrop-blur">
-                            <BoltIcon className="h-6 w-6 text-sky-300" />
-                            <div>
-                                <p className="font-semibold">สร้างคีย์รวดเร็ว</p>
-                                <p className="text-xs text-slate-200/80">เลือกแพลตฟอร์มแล้วสร้างคีย์ได้ทันที</p>
-                            </div>
+                    </div>
+                    <div className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 p-3">
+                        <BoltIcon className="h-6 w-6 text-sky-300" />
+                        <div>
+                            <p className="font-semibold">สร้างคีย์รวดเร็ว</p>
+                            <p className="text-xs text-slate-200/80">เลือกแพลตฟอร์มแล้วเริ่มสร้างทันที</p>
                         </div>
-                        <div className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/10 p-3 backdrop-blur">
-                            <SparklesIcon className="h-6 w-6 text-blue-200" />
-                            <div>
-                                <p className="font-semibold">ประสบการณ์ล้ำสมัย</p>
-                                <p className="text-xs text-slate-200/80">ดีไซน์ใหม่พร้อมเอฟเฟกต์สวยเท่ทุกครั้งที่ใช้งาน</p>
-                            </div>
+                    </div>
+                    <div className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 p-3">
+                        <SparklesIcon className="h-6 w-6 text-blue-200" />
+                        <div>
+                            <p className="font-semibold">ประสบการณ์ลื่นไหล</p>
+                            <p className="text-xs text-slate-200/80">ดีไซน์ที่เหมาะกับมือถือและเดสก์ท็อป</p>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div className="rounded-2xl border border-slate-200/80 bg-white/80 p-4 shadow-lg shadow-slate-200/50 backdrop-blur">
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                    <div>
-                        <p className="text-xs uppercase tracking-[0.35em] text-blue-500 font-semibold">เลือกแพลตฟอร์ม</p>
-                        <h2 className="text-lg font-semibold text-slate-800">เลือกแพลตฟอร์มสำหรับสร้างคีย์ของคุณ</h2>
-                    </div>
-                    <span className="inline-flex items-center gap-2 self-start rounded-full bg-blue-50 px-3 py-1 text-xs font-medium text-blue-600 shadow-sm animate-fade-up">
-                        <SparklesIcon className="h-4 w-4" />
-                        แตะเพื่อปลดล็อกการสร้างคีย์
-                    </span>
-                </div>
-                <div className="mt-3">
-                    <PlatformTabs platforms={platforms} selected={selectedPlatformId} onSelect={setSelectedPlatformId} />
+            <div className="md:hidden">
+                <div className="flex items-center rounded-full border border-slate-200 bg-white p-1 text-sm font-medium text-slate-500 shadow-sm">
+                    <button
+                        className={`flex-1 rounded-full px-3 py-2 transition-colors ${activeMenu === 'create' ? 'bg-blue-500 text-white shadow' : 'hover:text-slate-700'}`}
+                        onClick={() => setActiveMenu('create')}
+                    >
+                        สร้างคีย์
+                    </button>
+                    <button
+                        className={`flex-1 rounded-full px-3 py-2 transition-colors ${activeMenu === 'manage' ? 'bg-blue-500 text-white shadow' : 'hover:text-slate-700'}`}
+                        onClick={() => setActiveMenu('manage')}
+                    >
+                        จัดการคีย์ที่สร้าง
+                    </button>
                 </div>
             </div>
-            <Card className="max-w-xl">
-                <CardHeader>
-                    <CardTitle>สร้างคีย์ใหม่</CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <form onSubmit={handleGenerateKey} className="space-y-4">
-                        <Input label="โทเค็น" type="number" value={tokens} onChange={e => setTokens(Number(e.target.value))} required />
-                        {error && <p className="text-red-500 text-sm">{error}</p>}
-                        <div className="flex justify-end pt-2">
-                            <Button type="submit" disabled={platforms.length === 0}>สร้าง</Button>
-                        </div>
-                    </form>
-                </CardContent>
-            </Card>
 
-            <Card>
-                <CardHeader>
-                    <CardTitle>คีย์ที่สร้างแล้ว</CardTitle>
-                </CardHeader>
-                <div className="overflow-x-auto">
-                    <table className="w-full text-left text-sm">
-                        <thead className="bg-slate-50 text-slate-500">
-                            <tr>
-                                <th className="p-2 font-semibold">คีย์</th>
-                                <th className="p-2 font-semibold">โทเค็น</th>
-                                <th className="p-2 font-semibold">สถานะ</th>
-                                <th className="p-2 font-semibold">วันที่สร้าง</th>
-                                <th className="p-2 font-semibold text-center">จัดการ</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {loading ? (
-                                <tr><td colSpan={5} className="text-center p-4">กำลังโหลดคีย์...</td></tr>
-                            ) : filteredKeys.length > 0 ? (
-                                filteredKeys.map(k => <KeyRow key={k.id} apiKey={k} onUpdateStatus={handleUpdateKeyStatus} onDelete={confirmDeleteKey} />)
-                            ) : (
-                                <tr><td colSpan={5} className="text-center p-6 text-slate-500">ยังไม่มีการสร้างคีย์ทั่วไป</td></tr>
-                            )}
-                        </tbody>
-                    </table>
+            <div className="grid gap-6 md:grid-cols-2">
+                <div className={`${activeMenu === 'create' ? 'block' : 'hidden'} md:block`}> 
+                    <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+                        <div className="flex flex-col gap-3">
+                            <div>
+                                <p className="text-xs uppercase tracking-[0.3em] text-blue-500 font-semibold">เลือกแพลตฟอร์ม</p>
+                                <h2 className="text-lg font-semibold text-slate-800">เลือกแพลตฟอร์มสำหรับสร้างคีย์ของคุณ</h2>
+                            </div>
+                            <PlatformTabs platforms={platforms} selected={selectedPlatformId} onSelect={setSelectedPlatformId} />
+                        </div>
+                    </div>
+
+                    <Card className="mt-4">
+                        <CardHeader>
+                            <CardTitle>สร้างคีย์ใหม่</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <form onSubmit={handleGenerateKey} className="space-y-4">
+                                <Input label="โทเค็น" type="number" value={tokens} onChange={e => setTokens(Number(e.target.value))} required />
+                                {error && <p className="text-red-500 text-sm">{error}</p>}
+                                <div className="flex justify-end pt-2">
+                                    <Button type="submit" disabled={platforms.length === 0}>สร้าง</Button>
+                                </div>
+                            </form>
+                        </CardContent>
+                    </Card>
                 </div>
-            </Card>
-            
+
+                <div className={`${activeMenu === 'manage' ? 'block' : 'hidden'} md:block`}>
+                    <Card className="h-full">
+                        <CardHeader>
+                            <CardTitle>คีย์ที่สร้างแล้ว</CardTitle>
+                        </CardHeader>
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-left text-sm">
+                                <thead className="bg-slate-50 text-slate-500">
+                                    <tr>
+                                        <th className="p-2 font-semibold">คีย์</th>
+                                        <th className="p-2 font-semibold">โทเค็น</th>
+                                        <th className="p-2 font-semibold">สถานะ</th>
+                                        <th className="p-2 font-semibold">วันที่สร้าง</th>
+                                        <th className="p-2 font-semibold text-center">จัดการ</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {loading ? (
+                                        <tr><td colSpan={5} className="text-center p-4">กำลังโหลดคีย์...</td></tr>
+                                    ) : filteredKeys.length > 0 ? (
+                                        filteredKeys.map(k => <KeyRow key={k.id} apiKey={k} onUpdateStatus={handleUpdateKeyStatus} onDelete={confirmDeleteKey} />)
+                                    ) : (
+                                        <tr><td colSpan={5} className="text-center p-6 text-slate-500">ยังไม่มีการสร้างคีย์ทั่วไป</td></tr>
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
+                    </Card>
+                </div>
+            </div>
+
             <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="สร้างคีย์สำเร็จ">
                 <div>
                     <p className="text-slate-600 mb-4">คัดลอกคีย์ด้านล่างนี้ คีย์จะแสดงเพียงครั้งเดียวเท่านั้น</p>
