@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth, useSettings } from '../App';
 import Button from '../components/ui/Button';
 import Input from '../components/ui/Input';
 import Card, { CardHeader, CardTitle, CardContent } from '../components/ui/Card';
 import Logo from '../components/ui/Logo';
+import Modal from '../components/ui/Modal';
 import { UserIcon, LockClosedIcon, EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
 
 const LoginPage: React.FC = () => {
@@ -12,16 +13,26 @@ const LoginPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [remember, setRemember] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [showIntroModal, setShowIntroModal] = useState(false);
   const { login } = useAuth();
   const { notify, t } = useSettings();
 
-  React.useEffect(() => {
+  useEffect(() => {
     const remembered = localStorage.getItem('rememberUser');
     if (remembered) {
       setUsername(remembered);
       setRemember(true);
     }
+    const introAccepted = localStorage.getItem('vipkey_intro_ack');
+    if (!introAccepted) {
+      setShowIntroModal(true);
+    }
   }, []);
+
+  const handleIntroAccept = () => {
+    localStorage.setItem('vipkey_intro_ack', 'true');
+    setShowIntroModal(false);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -107,6 +118,45 @@ const LoginPage: React.FC = () => {
           </form>
         </CardContent>
       </Card>
+      <Modal
+        isOpen={showIntroModal}
+        onClose={handleIntroAccept}
+        title="ยินดีต้อนรับสู่ ADMIN BOT CSCODE"
+        disableBackdropClose
+        showCloseButton={false}
+      >
+        <div className="space-y-4 text-center">
+          <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-2xl bg-blue-50 shadow-inner shadow-blue-100">
+            <Logo className="h-14 w-14" />
+          </div>
+          <div>
+            <p className="text-sm font-semibold text-blue-600 tracking-[0.4em] uppercase">ADMIN BOT</p>
+            <h3 className="mt-2 text-2xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-sky-500 via-blue-600 to-indigo-500 animate-gradient-x">
+              CSCODE
+            </h3>
+            <p className="mt-2 text-sm text-slate-600">
+              แพลตฟอร์มศูนย์กลางสำหรับการจัดการคีย์ที่ทันสมัย โปรดอ่านรายละเอียดสำคัญก่อนเข้าสู่ระบบเพื่อประสบการณ์ที่ดีที่สุด
+            </p>
+          </div>
+          <ul className="space-y-2 text-left text-sm text-slate-600">
+            <li className="flex items-start gap-2">
+              <span className="mt-1 h-2 w-2 rounded-full bg-blue-500"></span>
+              <span>ดูแลการสร้างและจัดการคีย์เฉพาะผู้มีสิทธิ์เท่านั้น</span>
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="mt-1 h-2 w-2 rounded-full bg-cyan-500"></span>
+              <span>ระบบบันทึกประวัติการใช้งานเพื่อความปลอดภัยและตรวจสอบย้อนหลัง</span>
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="mt-1 h-2 w-2 rounded-full bg-indigo-500"></span>
+              <span>ปฏิบัติตามนโยบายแพลตฟอร์ม หากพบสิ่งผิดปกติให้ติดต่อผู้ดูแลทันที</span>
+            </li>
+          </ul>
+          <Button onClick={handleIntroAccept} className="w-full">
+            เข้าใจแล้ว เริ่มต้นใช้งาน
+          </Button>
+        </div>
+      </Modal>
     </div>
   );
 };

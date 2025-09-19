@@ -14,6 +14,9 @@ import {
     PauseIcon,
     PlayIcon,
     TrashIcon,
+    SparklesIcon,
+    ShieldCheckIcon,
+    BoltIcon,
 } from '@heroicons/react/24/outline';
 
 const KeyRow: React.FC<{ 
@@ -207,7 +210,59 @@ const GenerateKeyPage: React.FC = () => {
 
     return (
         <div className="space-y-6">
-            <PlatformTabs platforms={platforms} selected={selectedPlatformId} onSelect={setSelectedPlatformId} />
+            <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#050818] via-[#0f172a] to-[#1e3a8a] text-white shadow-2xl shadow-blue-900/40">
+                <div className="absolute inset-0 opacity-60 bg-[radial-gradient(circle_at_top,_rgba(59,130,246,0.35),_transparent_70%)]"></div>
+                <div className="absolute -top-20 -right-24 h-44 w-44 rounded-full bg-sky-500/40 blur-3xl animate-float"></div>
+                <div className="absolute -bottom-24 -left-10 h-52 w-52 rounded-full bg-blue-400/30 blur-3xl animate-float [animation-delay:1.5s]"></div>
+                <div className="relative z-10 px-6 py-8 sm:px-10">
+                    <p className="text-xs uppercase tracking-[0.6em] text-blue-200/80">ADMIN BOT</p>
+                    <h1 className="mt-2 text-3xl font-black sm:text-4xl">
+                        <span className="block text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-blue-400 to-sky-500 animate-gradient-x">CSCODE</span>
+                    </h1>
+                    <p className="mt-4 max-w-2xl text-sm text-slate-200/90">
+                        ศูนย์ควบคุมการสร้างคีย์ที่ออกแบบมาเพื่อให้คุณจัดการแพลตฟอร์มได้อย่างเหนือระดับ พร้อมเอฟเฟกต์และประสบการณ์ที่ลื่นไหลในทุกขั้นตอน
+                    </p>
+                    <div className="mt-6 grid gap-3 text-sm sm:grid-cols-3">
+                        <div className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/10 p-3 backdrop-blur">
+                            <ShieldCheckIcon className="h-6 w-6 text-cyan-300" />
+                            <div>
+                                <p className="font-semibold">ความปลอดภัยเต็มระดับ</p>
+                                <p className="text-xs text-slate-200/80">มั่นใจด้วยการควบคุมสถานะคีย์อย่างละเอียด</p>
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/10 p-3 backdrop-blur">
+                            <BoltIcon className="h-6 w-6 text-sky-300" />
+                            <div>
+                                <p className="font-semibold">สร้างคีย์รวดเร็ว</p>
+                                <p className="text-xs text-slate-200/80">เลือกแพลตฟอร์มแล้วสร้างคีย์ได้ทันที</p>
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/10 p-3 backdrop-blur">
+                            <SparklesIcon className="h-6 w-6 text-blue-200" />
+                            <div>
+                                <p className="font-semibold">ประสบการณ์ล้ำสมัย</p>
+                                <p className="text-xs text-slate-200/80">ดีไซน์ใหม่พร้อมเอฟเฟกต์สวยเท่ทุกครั้งที่ใช้งาน</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div className="rounded-2xl border border-slate-200/80 bg-white/80 p-4 shadow-lg shadow-slate-200/50 backdrop-blur">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                        <p className="text-xs uppercase tracking-[0.35em] text-blue-500 font-semibold">เลือกแพลตฟอร์ม</p>
+                        <h2 className="text-lg font-semibold text-slate-800">เลือกแพลตฟอร์มสำหรับสร้างคีย์ของคุณ</h2>
+                    </div>
+                    <span className="inline-flex items-center gap-2 self-start rounded-full bg-blue-50 px-3 py-1 text-xs font-medium text-blue-600 shadow-sm animate-fade-up">
+                        <SparklesIcon className="h-4 w-4" />
+                        แตะเพื่อปลดล็อกการสร้างคีย์
+                    </span>
+                </div>
+                <div className="mt-3">
+                    <PlatformTabs platforms={platforms} selected={selectedPlatformId} onSelect={setSelectedPlatformId} />
+                </div>
+            </div>
             <Card className="max-w-xl">
                 <CardHeader>
                     <CardTitle>สร้างคีย์ใหม่</CardTitle>
