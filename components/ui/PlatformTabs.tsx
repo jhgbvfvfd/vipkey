@@ -1,4 +1,4 @@
-import React, { useId } from 'react';
+import React, { useCallback, useEffect } from 'react';
 import { CheckCircleIcon, SparklesIcon } from '@heroicons/react/24/solid';
 import { Platform } from '../../types';
 import { normalizePattern } from '../../utils/keyGenerator';
@@ -64,7 +64,43 @@ const PlatformTabs: React.FC<PlatformTabsProps> = ({ platforms, selected, onSele
     );
   }
 
-  const groupName = useId();
+  useEffect(() => {
+    if (platforms.length === 0) return;
+
+    const hasSelected = selected && platforms.some(platform => platform.id === selected);
+    if (!hasSelected) {
+      onSelect(platforms[0].id);
+    }
+  }, [platforms, selected, onSelect]);
+
+  const handleSelect = useCallback(
+    (id: string) => {
+      if (id !== selected) {
+        onSelect(id);
+      }
+    },
+    [onSelect, selected]
+  );
+
+  const handleKeyDown = useCallback(
+    (event: React.KeyboardEvent<HTMLButtonElement>, currentIndex: number) => {
+      if (platforms.length === 0) return;
+
+      if (event.key === 'ArrowRight' || event.key === 'ArrowDown') {
+        event.preventDefault();
+        const nextIndex = (currentIndex + 1) % platforms.length;
+        handleSelect(platforms[nextIndex].id);
+      } else if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') {
+        event.preventDefault();
+        const prevIndex = (currentIndex - 1 + platforms.length) % platforms.length;
+        handleSelect(platforms[prevIndex].id);
+      } else if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        handleSelect(platforms[currentIndex].id);
+      }
+    },
+    [handleSelect, platforms]
+  );
 
   return (
     <fieldset className="space-y-4">
@@ -76,31 +112,29 @@ const PlatformTabs: React.FC<PlatformTabsProps> = ({ platforms, selected, onSele
       >
         {platforms.map((platform, index) => {
           const isSelected = selected === platform.id;
+          const isInitialFocusable = !selected && index === 0;
           const variant = accentPalette[index % accentPalette.length];
           const initial = platform.title?.trim().charAt(0)?.toUpperCase() || '?';
           const normalizedPattern = normalizePattern(platform.pattern);
           const patternDescription = describePattern(normalizedPattern);
           const exampleKey = createExampleKey(platform.prefix, normalizedPattern);
-          const inputId = `${groupName}-${platform.id}`;
 
           return (
-            <label
+            <button
               key={platform.id}
-              className={`group relative flex h-full w-full cursor-pointer overflow-hidden rounded-2xl border bg-white/80 p-5 text-left shadow-sm transition-all duration-300 focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-offset-white ${
+              type="button"
+              role="radio"
+              aria-checked={isSelected}
+              aria-label={platform.title}
+              tabIndex={isSelected || isInitialFocusable ? 0 : -1}
+              onClick={() => handleSelect(platform.id)}
+              onKeyDown={event => handleKeyDown(event, index)}
+              className={`group relative flex h-full w-full cursor-pointer overflow-hidden rounded-2xl border bg-white/80 p-5 text-left shadow-sm transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-white ${
                 isSelected
                   ? `border-transparent ${variant.ring}`
                   : 'border-slate-200/70 hover:-translate-y-0.5 hover:border-slate-300/70 hover:shadow-[0_20px_45px_-25px_rgba(15,23,42,0.25)]'
               }`}
             >
-              <input
-                id={inputId}
-                type="radio"
-                name={groupName}
-                value={platform.id}
-                checked={isSelected}
-                onChange={() => onSelect(platform.id)}
-                className="sr-only"
-              />
               <span
                 aria-hidden
                 className={`pointer-events-none absolute inset-0 bg-gradient-to-br transition-opacity duration-500 ${
@@ -174,7 +208,7 @@ const PlatformTabs: React.FC<PlatformTabsProps> = ({ platforms, selected, onSele
                   </span>
                 </div>
               </div>
-            </label>
+            </button>
           );
         })}
       </div>
