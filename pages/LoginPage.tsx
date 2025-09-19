@@ -14,6 +14,7 @@ const LoginPage: React.FC = () => {
   const [remember, setRemember] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showIntroModal, setShowIntroModal] = useState(false);
+  const [hideHeroMessage, setHideHeroMessage] = useState(false);
   const { login } = useAuth();
   const { notify, t } = useSettings();
 
@@ -27,11 +28,19 @@ const LoginPage: React.FC = () => {
     if (!introAccepted) {
       setShowIntroModal(true);
     }
+    if (localStorage.getItem('vipkey_hide_login_hero') === 'true') {
+      setHideHeroMessage(true);
+    }
   }, []);
 
   const handleIntroAccept = () => {
     localStorage.setItem('vipkey_intro_ack', 'true');
     setShowIntroModal(false);
+  };
+
+  const handleHideHeroMessage = () => {
+    setHideHeroMessage(true);
+    localStorage.setItem('vipkey_hide_login_hero', 'true');
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -65,17 +74,26 @@ const LoginPage: React.FC = () => {
         />
       </div>
       <div className="relative z-10 flex min-h-screen flex-col items-center justify-center px-4 py-12">
-        <div className="mb-12 max-w-2xl text-center text-slate-100">
-          <span className="inline-flex items-center justify-center rounded-full border border-white/10 bg-white/10 px-4 py-1 text-[11px] font-semibold uppercase tracking-[0.55em] text-sky-300/90">
-            ADMIN BOT
-          </span>
-          <h1 className="mt-6 text-3xl font-semibold text-white sm:text-4xl">
-            เข้าสู่ระบบศูนย์ควบคุม CSCODE
-          </h1>
-          <p className="mt-4 text-sm text-slate-300 sm:text-base">
-            สร้างและจัดการคีย์ได้อย่างปลอดภัย พร้อมระบบควบคุมเครดิตที่แม่นยำสำหรับทุกตัวแทน
-          </p>
-        </div>
+        {!hideHeroMessage && (
+          <div className="mb-12 max-w-2xl text-center text-slate-100">
+            <span className="inline-flex items-center justify-center rounded-full border border-white/10 bg-white/10 px-4 py-1 text-[11px] font-semibold uppercase tracking-[0.55em] text-sky-300/90">
+              ADMIN BOT
+            </span>
+            <h1 className="mt-6 text-3xl font-semibold text-white sm:text-4xl">
+              เข้าสู่ระบบศูนย์ควบคุม CSCODE
+            </h1>
+            <p className="mt-4 text-sm text-slate-300 sm:text-base">
+              สร้างและจัดการคีย์ได้อย่างปลอดภัย พร้อมระบบควบคุมเครดิตที่แม่นยำสำหรับทุกตัวแทน
+            </p>
+            <button
+              type="button"
+              onClick={handleHideHeroMessage}
+              className="mt-5 text-xs font-medium text-slate-300 underline-offset-4 transition hover:text-slate-100 hover:underline"
+            >
+              ซ่อนข้อความนี้
+            </button>
+          </div>
+        )}
         <div className="w-full max-w-md animate-fade-up">
           <div className="rounded-[32px] bg-gradient-to-br from-sky-500/35 via-blue-500/25 to-indigo-500/40 p-[1px] shadow-[0_35px_65px_-25px_rgba(14,165,233,0.55)] backdrop-blur">
             <Card className="relative overflow-hidden !rounded-[32px] !border-white/10 !bg-slate-950/85 p-8 text-slate-100">
