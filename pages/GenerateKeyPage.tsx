@@ -260,16 +260,21 @@ const GenerateKeyPage: React.FC = () => {
                             </CardHeader>
                             <CardContent>
                                 <form onSubmit={handleGenerateKey} className="space-y-4">
-                                    <Input
-                                        label={`โทเค็น (${MIN_TOKENS} - ${MAX_TOKENS})`}
-                                        type="number"
-                                        min={MIN_TOKENS}
-                                        max={MAX_TOKENS}
-                                        step={1}
-                                        value={tokens}
-                                        onChange={e => setTokens(Number(e.target.value))}
-                                        required
-                                    />
+                                    <div className="space-y-1">
+                                        <Input
+                                            label="จำนวนโทเค็นต่อคีย์"
+                                            type="number"
+                                            min={MIN_TOKENS}
+                                            max={MAX_TOKENS}
+                                            step={1}
+                                            value={tokens}
+                                            onChange={e => setTokens(Number(e.target.value))}
+                                            required
+                                        />
+                                        <p className="text-xs text-slate-500">
+                                            กำหนดได้ระหว่าง {MIN_TOKENS.toLocaleString()} - {MAX_TOKENS.toLocaleString()} โทเค็นต่อคีย์
+                                        </p>
+                                    </div>
                                     {error && <p className="text-red-500 text-sm">{error}</p>}
                                     <div className="flex justify-end pt-2">
                                         <Button type="submit" disabled={platforms.length === 0}>สร้าง</Button>
