@@ -24,7 +24,7 @@ import AgentMenusPage from './pages/AgentMenusPage';
 import AgentGenerateKeyPage from './pages/AgentGenerateKeyPage';
 import AgentAgentsPage from './pages/AgentAgentsPage';
 import { Agent, Platform, Bot, StandaloneKey, KeyLog } from './types';
-import { getPlatforms, getAgents, getBots, getStandaloneKeys, getKeyLogs } from './services/firebaseService';
+import { getPlatforms, getAgents, getBots, getStandaloneKeys, getKeyLogs, getAdminPassword, setAdminPassword } from './services/firebaseService';
 
 type UserRole = 'admin' | 'agent';
 interface User {
@@ -195,12 +195,21 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
 
     const login = useCallback(async (username: string, password?: string): Promise<'success' | 'banned' | 'invalid'> => {
         // Admin Login
-        const storedAdminPassword = localStorage.getItem('adminPassword') || 'admin';
-        if (username === 'admin' && password === storedAdminPassword) {
-            const adminUser: User = { role: 'admin', data: { username: 'admin' } };
-            sessionStorage.setItem('user', JSON.stringify(adminUser));
-            setUser(adminUser);
-            return 'success';
+        if (username === 'admin' && typeof password === 'string') {
+            const { password: storedAdminPassword, source } = await getAdminPassword();
+            if (password === storedAdminPassword) {
+                if (source !== 'remote') {
+                    try {
+                        await setAdminPassword(storedAdminPassword);
+                    } catch (error) {
+                        console.error('Failed to sync admin password to database:', error);
+                    }
+                }
+                const adminUser: User = { role: 'admin', data: { username: 'admin' } };
+                sessionStorage.setItem('user', JSON.stringify(adminUser));
+                setUser(adminUser);
+                return 'success';
+            }
         }
 
         // Agent Login

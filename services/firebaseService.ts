@@ -35,6 +35,45 @@ async function deleteData(path: string): Promise<void> {
     }
 }
 
+type AdminPasswordSource = 'remote' | 'local' | 'default';
+
+const getCachedAdminPassword = (): string | null => {
+    if (typeof window === 'undefined') {
+        return null;
+    }
+    return localStorage.getItem('adminPassword');
+};
+
+const cacheAdminPassword = (password: string) => {
+    if (typeof window !== 'undefined') {
+        localStorage.setItem('adminPassword', password);
+    }
+};
+
+export const getAdminPassword = async (): Promise<{ password: string; source: AdminPasswordSource }> => {
+    try {
+        const data = await fetchData<{ password?: string } | null>('admin_credentials');
+        if (data && typeof data.password === 'string' && data.password.trim().length > 0) {
+            cacheAdminPassword(data.password);
+            return { password: data.password, source: 'remote' };
+        }
+    } catch (error) {
+        console.error('Failed to fetch admin password:', error);
+    }
+
+    const cached = getCachedAdminPassword();
+    if (cached) {
+        return { password: cached, source: 'local' };
+    }
+
+    return { password: 'admin', source: 'default' };
+};
+
+export const setAdminPassword = async (password: string): Promise<void> => {
+    await setData('admin_credentials', { password });
+    cacheAdminPassword(password);
+};
+
 
 // Helper to convert Firebase object response to array
 const firebaseObjectToArray = <T extends {id: string}>(data: Record<string, Omit<T, 'id'>> | null): T[] => {
