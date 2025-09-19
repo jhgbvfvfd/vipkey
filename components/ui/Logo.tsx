@@ -6,8 +6,8 @@ const Logo: React.FC<{ className?: string }> = ({ className }) => (
   <div
     aria-label="CSCODE"
     className={[
-      'relative inline-flex aspect-square shrink-0 items-center justify-center overflow-hidden rounded-2xl',
-      'bg-blue-500 text-white shadow-md ring-1 ring-blue-400/40',
+      'relative inline-flex aspect-square shrink-0 items-center justify-center overflow-hidden rounded-3xl',
+      'bg-transparent shadow-xl ring-2 ring-blue-400/40',
       className,
     ]
       .filter(Boolean)
@@ -16,7 +16,7 @@ const Logo: React.FC<{ className?: string }> = ({ className }) => (
     <img
       src={LOGO_URL}
       alt="CSCODE Logo"
-      className="relative h-full w-full object-contain p-2"
+      className="relative h-full w-full object-cover"
       loading="lazy"
       referrerPolicy="no-referrer"
     />
