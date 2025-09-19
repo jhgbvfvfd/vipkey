@@ -67,7 +67,11 @@ const PlatformTabs: React.FC<PlatformTabsProps> = ({ platforms, selected, onSele
   return (
     <fieldset className="space-y-4">
       <legend className="text-xs font-semibold uppercase tracking-[0.35em] text-slate-500">เลือกแพลตฟอร์ม</legend>
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+      <div
+        role="radiogroup"
+        aria-label="เลือกแพลตฟอร์ม"
+        className="grid gap-4 md:grid-cols-2 xl:grid-cols-3"
+      >
         {platforms.map((platform, index) => {
           const isSelected = selected === platform.id;
           const variant = accentPalette[index % accentPalette.length];
@@ -77,25 +81,18 @@ const PlatformTabs: React.FC<PlatformTabsProps> = ({ platforms, selected, onSele
           const exampleKey = createExampleKey(platform.prefix, normalizedPattern);
 
           return (
-            <label
+            <button
               key={platform.id}
-              htmlFor={`platform-${platform.id}`}
-              className={`group relative flex cursor-pointer overflow-hidden rounded-2xl border bg-white/80 p-5 shadow-sm transition-all duration-300 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-offset-white ${
+              type="button"
+              role="radio"
+              aria-checked={isSelected}
+              onClick={() => onSelect(platform.id)}
+              className={`group relative flex h-full w-full cursor-pointer overflow-hidden rounded-2xl border bg-white/80 p-5 text-left shadow-sm transition-all duration-300 outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-white ${
                 isSelected
                   ? `border-transparent ${variant.ring}`
                   : 'border-slate-200/70 hover:-translate-y-0.5 hover:border-slate-300/70 hover:shadow-[0_20px_45px_-25px_rgba(15,23,42,0.25)]'
               }`}
             >
-              <input
-                id={`platform-${platform.id}`}
-                type="radio"
-                name="platform-selector"
-                value={platform.id}
-                checked={isSelected}
-                onChange={() => onSelect(platform.id)}
-                className="sr-only"
-              />
-
               <span
                 aria-hidden
                 className={`pointer-events-none absolute inset-0 bg-gradient-to-br transition-opacity duration-500 ${
@@ -169,7 +166,7 @@ const PlatformTabs: React.FC<PlatformTabsProps> = ({ platforms, selected, onSele
                   </span>
                 </div>
               </div>
-            </label>
+            </button>
           );
         })}
       </div>
