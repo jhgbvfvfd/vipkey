@@ -10,7 +10,8 @@ import Modal from '../components/ui/Modal';
 import Input from '../components/ui/Input';
 import { MagnifyingGlassIcon } from '@heroicons/react/24/outline';
 
-const MAX_CREDIT_ADJUSTMENT = 1_000_000;
+const DEFAULT_NEW_AGENT_CREDITS = 1000;
+const DEFAULT_CREDIT_INCREMENT = 100;
 
 const AgentCard: React.FC<{
     agent: Agent;
@@ -199,8 +200,8 @@ const AgentsPage: React.FC = () => {
     const [isKeysModalOpen, setKeysModalOpen] = useState(false);
     const [isAddCreditsModalOpen, setAddCreditsModalOpen] = useState(false);
     const [selectedAgent, setSelectedAgent] = useState<Agent | null>(null);
-    const [newAgentData, setNewAgentData] = useState({ username: '', password: '', credits: 1000 });
-    const [creditsToAdd, setCreditsToAdd] = useState(100);
+    const [newAgentData, setNewAgentData] = useState({ username: '', password: '', credits: DEFAULT_NEW_AGENT_CREDITS });
+    const [creditsToAdd, setCreditsToAdd] = useState(DEFAULT_CREDIT_INCREMENT);
     const [error, setError] = useState('');
     const [query, setQuery] = useState('');
 
@@ -224,10 +225,6 @@ const AgentsPage: React.FC = () => {
                 setError('กรุณากรอกจำนวนเครดิตมากกว่า 0');
                 return;
             }
-            if (initialCredits > MAX_CREDIT_ADJUSTMENT) {
-                setError(`เติมเครดิตได้สูงสุด ${MAX_CREDIT_ADJUSTMENT.toLocaleString('th-TH')} ต่อครั้ง`);
-                return;
-            }
 
             const initialHistoryEntry: CreditHistoryEntry = {
                 date: new Date().toISOString(),
@@ -248,7 +245,7 @@ const AgentsPage: React.FC = () => {
             });
             refreshData();
             setAddAgentModalOpen(false);
-            setNewAgentData({ username: '', password: '', credits: 1000 });
+            setNewAgentData({ username: '', password: '', credits: DEFAULT_NEW_AGENT_CREDITS });
             notify('สร้างตัวแทนเรียบร้อย');
         } catch (err) {
             setError('ไม่สามารถเพิ่มตัวแทนได้');
@@ -269,7 +266,7 @@ const AgentsPage: React.FC = () => {
     
     const handleOpenAddCredits = (agent: Agent) => {
         setSelectedAgent(agent);
-        setCreditsToAdd(Math.min(100, MAX_CREDIT_ADJUSTMENT));
+        setCreditsToAdd(DEFAULT_CREDIT_INCREMENT);
         setAddCreditsModalOpen(true);
     };
 
@@ -280,11 +277,6 @@ const AgentsPage: React.FC = () => {
             notify('กรุณาระบุจำนวนเครดิตมากกว่า 0', 'error');
             return;
         }
-        if (creditsToAdd > MAX_CREDIT_ADJUSTMENT) {
-            notify(`เติมเครดิตต่อครั้งได้ไม่เกิน ${MAX_CREDIT_ADJUSTMENT.toLocaleString('th-TH')}`, 'error');
-            return;
-        }
-
         try {
             const updatedAgent = JSON.parse(JSON.stringify(selectedAgent));
             const newBalance = updatedAgent.credits + creditsToAdd;
@@ -369,12 +361,11 @@ const AgentsPage: React.FC = () => {
                         placeholder="เช่น 1000"
                         value={newAgentData.credits}
                         min={0}
-                        max={MAX_CREDIT_ADJUSTMENT}
                         onChange={e => {
                             const value = Number(e.target.value);
                             setNewAgentData({
                                 ...newAgentData,
-                                credits: Math.max(0, Math.min(MAX_CREDIT_ADJUSTMENT, Number.isFinite(value) ? value : 0)),
+                                credits: Math.max(0, Number.isFinite(value) ? value : 0),
                             });
                         }}
                         required
@@ -398,10 +389,9 @@ const AgentsPage: React.FC = () => {
                         placeholder="เช่น 500"
                         value={creditsToAdd}
                         min={0}
-                        max={MAX_CREDIT_ADJUSTMENT}
                         onChange={e => {
                             const value = Number(e.target.value);
-                            setCreditsToAdd(Math.max(0, Math.min(MAX_CREDIT_ADJUSTMENT, Number.isFinite(value) ? value : 0)));
+                            setCreditsToAdd(Math.max(0, Number.isFinite(value) ? value : 0));
                         }}
                         required
                     />
