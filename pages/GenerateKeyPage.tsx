@@ -212,7 +212,7 @@ const GenerateKeyPage: React.FC = () => {
 
     return (
         <div className="space-y-6">
-            <div className="rounded-3xl bg-gradient-to-r from-slate-900 via-slate-800 to-slate-700 p-6 text-white shadow-lg sm:p-8">
+            <div className="rounded-3xl bg-gradient-to-r from-slate-900 via-slate-800 to-slate-700 p-6 text-white shadow-lg sm:p-8 overflow-hidden">
                 <p className="text-xs uppercase tracking-[0.45em] text-blue-200/90">ADMIN BOT</p>
                 <h1 className="mt-2 text-3xl font-black sm:text-4xl">
                     <span className="block text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-blue-400 to-sky-500">CSCODE</span>

@@ -54,6 +54,11 @@ const ChangePasswordPage: React.FC = () => {
           <CardTitle>ตั้งรหัสผ่านใหม่</CardTitle>
         </CardHeader>
         <CardContent>
+          {user?.role === 'admin' && (
+            <p className="mb-4 text-xs text-slate-500">
+              ชื่อผู้ใช้ของผู้ดูแลระบบจะยังคงเป็น <span className="font-semibold text-slate-700">admin</span> ระบบจะจดจำเฉพาะรหัสผ่านใหม่ที่ตั้งในหน้านี้
+            </p>
+          )}
           <form onSubmit={handleSubmit} className="space-y-4">
             <Input
               id="current"

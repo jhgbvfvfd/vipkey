@@ -63,6 +63,9 @@ const LoginPage: React.FC = () => {
             </div>
             <CardTitle className="text-2xl font-bold">{t('login')}</CardTitle>
             <p className="text-slate-500 mt-1">{t('login')}</p>
+            <p className="mt-3 text-xs text-blue-600">
+              บัญชีผู้ดูแลระบบใช้ชื่อผู้ใช้ <span className="font-semibold text-slate-800">admin</span> และสามารถเปลี่ยนได้เฉพาะรหัสผ่าน
+            </p>
           </div>
         </CardHeader>
         <CardContent className="!p-0">
@@ -116,6 +119,9 @@ const LoginPage: React.FC = () => {
               {loading ? 'กำลังตรวจสอบ...' : t('login')}
             </Button>
           </form>
+          <p className="mt-4 text-center text-xs text-slate-400">
+            หากต้องการเปลี่ยนรหัสผ่านของแอดมิน สามารถดำเนินการได้ที่เมนู “ตั้งรหัสผ่านใหม่” และใช้รหัสผ่านใหม่ในการเข้าสู่ระบบถัดไป
+          </p>
         </CardContent>
       </Card>
       <Modal

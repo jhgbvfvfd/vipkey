@@ -63,7 +63,7 @@ const PlatformTabs: React.FC<PlatformTabsProps> = ({ platforms, selected, onSele
       </button>
 
       {isOpen && (
-        <div className="absolute z-20 mt-2 w-full min-w-[220px] overflow-hidden rounded-xl border border-slate-200 bg-white shadow-lg">
+        <div className="absolute left-0 right-0 z-20 mt-2 w-full overflow-hidden rounded-xl border border-slate-200 bg-white shadow-lg">
           <div className="max-h-60 overflow-y-auto py-2">
             {platforms.map(platform => {
               const isSelected = platform.id === selectedPlatform.id;
