@@ -47,9 +47,9 @@ const KeyRow: React.FC<{
 
     return (
         <tr className="border-b border-slate-200 last:border-b-0 odd:bg-white even:bg-slate-50 hover:bg-slate-100">
-            <td className="p-2 font-mono text-sm text-blue-600">{apiKey.key}</td>
-            <td className="p-2 text-slate-600">{apiKey.tokens_remaining.toLocaleString()}</td>
-            <td className="p-2">
+            <td className="p-2 font-mono text-xs sm:text-sm text-blue-600 break-all">{apiKey.key}</td>
+            <td className="p-2 text-right text-xs sm:text-sm text-slate-600 whitespace-nowrap">{apiKey.tokens_remaining.toLocaleString()}</td>
+            <td className="p-2 whitespace-nowrap">
                 {(() => {
                     const statusKey = apiKey.tokens_remaining <= 0
                         ? 'statusNoTokens'
@@ -76,7 +76,7 @@ const KeyRow: React.FC<{
                     );
                 })()}
             </td>
-            <td className="p-2 text-slate-600">{new Date(apiKey.createdAt).toLocaleDateString('th-TH')}</td>
+            <td className="p-2 text-xs sm:text-sm text-slate-600 whitespace-nowrap">{new Date(apiKey.createdAt).toLocaleDateString('th-TH')}</td>
             <td className="p-2 text-center">
                 <div className="inline-flex items-center justify-center gap-1">
                     <button
@@ -286,19 +286,19 @@ const GenerateKeyPage: React.FC = () => {
                 </div>
 
                 <div className={`${activeMenu === 'manage' ? 'block' : 'hidden'} md:block`}>
-                    <Card className="h-full">
+                    <Card className="h-full mx-auto max-w-md sm:max-w-lg md:max-w-none md:mx-0">
                         <CardHeader>
                             <CardTitle>คีย์ที่สร้างแล้ว</CardTitle>
                         </CardHeader>
                         <div className="overflow-x-auto">
-                            <table className="w-full text-left text-sm">
+                            <table className="w-full table-fixed text-left text-sm">
                                 <thead className="bg-slate-50 text-slate-500">
                                     <tr>
-                                        <th className="p-2 font-semibold">คีย์</th>
-                                        <th className="p-2 font-semibold">โทเค็น</th>
-                                        <th className="p-2 font-semibold">สถานะ</th>
-                                        <th className="p-2 font-semibold">วันที่สร้าง</th>
-                                        <th className="p-2 font-semibold text-center">จัดการ</th>
+                                        <th className="w-40 p-2 text-xs font-semibold sm:text-sm">คีย์</th>
+                                        <th className="w-16 p-2 text-xs font-semibold sm:text-sm text-right">โทเค็น</th>
+                                        <th className="w-24 p-2 text-xs font-semibold sm:text-sm">สถานะ</th>
+                                        <th className="w-28 p-2 text-xs font-semibold sm:text-sm">วันที่สร้าง</th>
+                                        <th className="p-2 text-center text-xs font-semibold sm:text-sm">จัดการ</th>
                                     </tr>
                                 </thead>
                                 <tbody>
