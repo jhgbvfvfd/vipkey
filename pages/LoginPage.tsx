@@ -58,9 +58,7 @@ const LoginPage: React.FC = () => {
       <Card className="w-full max-w-md p-8 bg-white/80 backdrop-blur-lg rounded-2xl shadow-2xl">
         <CardHeader className="!p-0 mb-6 text-center">
           <div className="flex flex-col items-center">
-            <div className="w-20 h-20 mb-4 bg-blue-600 text-white rounded-xl flex items-center justify-center shadow-lg">
-              <Logo className="w-12 h-12" />
-            </div>
+            <Logo className="mb-4 h-20 w-20" />
             <CardTitle className="text-2xl font-bold">{t('login')}</CardTitle>
             <p className="text-slate-500 mt-1">{t('login')}</p>
             <p className="mt-3 text-xs text-blue-600">
@@ -132,9 +130,7 @@ const LoginPage: React.FC = () => {
         showCloseButton={false}
       >
         <div className="space-y-4 text-center">
-          <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-2xl bg-blue-50 shadow-inner shadow-blue-100">
-            <Logo className="h-14 w-14" />
-          </div>
+          <Logo className="mx-auto h-20 w-20 shadow-xl shadow-blue-200/70" />
           <div>
             <p className="text-sm font-semibold text-blue-600 tracking-[0.4em] uppercase">ADMIN BOT</p>
             <h3 className="mt-2 text-2xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-sky-500 via-blue-600 to-indigo-500 animate-gradient-x">
