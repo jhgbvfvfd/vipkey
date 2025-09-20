@@ -42,7 +42,7 @@ const ChangePasswordPage: React.FC = () => {
       } else {
         const updatedAgent = { ...agent, password: newPassword };
         await updateAgent(updatedAgent);
-        await login(agent.username, newPassword);
+        await login(agent.username, newPassword, { skipMaintenanceCheck: true });
         notify('เปลี่ยนรหัสผ่านแล้ว');
       }
     }

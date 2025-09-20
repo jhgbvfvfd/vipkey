@@ -32,7 +32,7 @@ const AgentGenerateKeyPage: React.FC = () => {
 
     const handleUpdateAgentData = async (updatedAgent: Agent) => {
         await updateAgent(updatedAgent);
-        await login(agent.username, agent.password);
+        await login(agent.username, agent.password, { skipMaintenanceCheck: true });
         refreshData();
     };
 

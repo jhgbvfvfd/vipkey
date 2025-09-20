@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { useAuth, useSettings } from '../App';
+import React, { useState, useEffect, useMemo } from 'react';
+import { useAuth, useSettings, useMaintenance } from '../App';
 import Button from '../components/ui/Button';
 import Input from '../components/ui/Input';
 import Card, { CardHeader, CardTitle, CardContent } from '../components/ui/Card';
@@ -16,6 +16,10 @@ const LoginPage: React.FC = () => {
   const [showIntroModal, setShowIntroModal] = useState(false);
   const { login } = useAuth();
   const { notify, t } = useSettings();
+  const { config: maintenanceConfig, loading: maintenanceLoading } = useMaintenance();
+  const [clientIp, setClientIp] = useState<string | null>(null);
+  const [ipLoading, setIpLoading] = useState(true);
+  const [blockedByMaintenance, setBlockedByMaintenance] = useState(false);
 
   useEffect(() => {
     const remembered = localStorage.getItem('rememberUser');
@@ -29,6 +33,58 @@ const LoginPage: React.FC = () => {
     }
   }, []);
 
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      setIpLoading(false);
+      return;
+    }
+
+    let active = true;
+    const resolveIp = async () => {
+      try {
+        const response = await fetch('https://api.ipify.org?format=json');
+        if (!response.ok) {
+          throw new Error('Failed to fetch IP');
+        }
+        const data = await response.json();
+        if (active) {
+          setClientIp(data.ip);
+        }
+      } catch (error) {
+        console.error('Unable to resolve client IP:', error);
+        if (active) {
+          setClientIp('');
+        }
+      } finally {
+        if (active) {
+          setIpLoading(false);
+        }
+      }
+    };
+
+    resolveIp();
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!maintenanceConfig.enabled) {
+      setBlockedByMaintenance(false);
+    }
+  }, [maintenanceConfig.enabled]);
+
+  const allowedIps = useMemo(() => maintenanceConfig.allowedAdminIps ?? [], [maintenanceConfig.allowedAdminIps]);
+  const ipAllowed = useMemo(() => {
+    if (!clientIp) return false;
+    return allowedIps.includes(clientIp.trim());
+  }, [allowedIps, clientIp]);
+  const maintenanceActive = maintenanceConfig.enabled;
+  const waitingForAccess = maintenanceActive && !blockedByMaintenance && !ipAllowed && (maintenanceLoading || ipLoading);
+  const maintenanceMessage = maintenanceConfig.message?.trim() || t('maintenanceDefaultMessage');
+  const shouldShowMaintenanceView = maintenanceActive && !waitingForAccess && (!ipAllowed || blockedByMaintenance);
+
   const handleIntroAccept = () => {
     localStorage.setItem('vipkey_intro_ack', 'true');
     setShowIntroModal(false);
@@ -37,7 +93,7 @@ const LoginPage: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    const result = await login(username, password);
+    const result = await login(username, password, { clientIp: clientIp ?? undefined });
     if (result === 'success') {
       notify(t('loginSuccess'));
       if (remember) {
@@ -45,6 +101,9 @@ const LoginPage: React.FC = () => {
       } else {
         localStorage.removeItem('rememberUser');
       }
+    } else if (result === 'maintenance') {
+      setBlockedByMaintenance(true);
+      notify(t('maintenanceLoginBlocked'), 'error');
     } else if (result === 'banned') {
       notify(t('bannedUser'), 'error');
     } else {
@@ -86,67 +145,102 @@ const LoginPage: React.FC = () => {
                   </div>
                 </CardHeader>
                 <CardContent className="mt-6 space-y-5 !border-none !p-0 !text-slate-200">
-                  <form onSubmit={handleSubmit} className="space-y-5">
-                    <Input
-                      id="username"
-                      label={t('username')}
-                      type="text"
-                      value={username}
-                      onChange={(e) => setUsername(e.target.value)}
-                      placeholder={t('username')}
-                      required
-                      disabled={loading}
-                      leftIcon={<UserIcon className="h-5 w-5" />}
-                      labelClassName="!text-slate-300"
-                      className="!bg-slate-900/60 !border-sky-500/30 !text-slate-100 placeholder:text-slate-500 focus:!border-sky-400 focus:!ring-sky-400/60"
-                    />
-                    <Input
-                      id="password"
-                      label={t('password')}
-                      type={showPassword ? 'text' : 'password'}
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      placeholder="••••••••"
-                      required
-                      disabled={loading}
-                      leftIcon={<LockClosedIcon className="h-5 w-5" />}
-                      rightElement={
-                        <button
-                          type="button"
-                          onClick={() => setShowPassword((p) => !p)}
-                          className="text-slate-400 transition-colors hover:text-slate-200"
-                        >
-                          {showPassword ? <EyeSlashIcon className="h-5 w-5" /> : <EyeIcon className="h-5 w-5" />}
-                        </button>
-                      }
-                      labelClassName="!text-slate-300"
-                      className="!bg-slate-900/60 !border-sky-500/30 !text-slate-100 placeholder:text-slate-500 focus:!border-sky-400 focus:!ring-sky-400/60"
-                    />
-                    <div className="flex items-center justify-between text-sm text-slate-300">
-                      <label className="flex items-center gap-2">
-                        <input
-                          type="checkbox"
-                          className="h-4 w-4 rounded border-slate-500/60 bg-slate-900/80 accent-sky-500"
-                          checked={remember}
-                          onChange={(e) => setRemember(e.target.checked)}
-                        />
-                        {t('rememberMe')}
-                      </label>
-                      <a href="#" className="text-sky-300 transition-colors hover:text-sky-200">
-                        ลืมรหัสผ่าน?
-                      </a>
+                  {waitingForAccess ? (
+                    <div className="flex flex-col items-center gap-4 py-8">
+                      <div className="h-12 w-12 animate-spin rounded-full border-2 border-sky-400 border-t-transparent" />
+                      <p className="text-sm text-slate-300">{t('maintenanceChecking')}</p>
                     </div>
-                    <Button
-                      type="submit"
-                      className="mt-2 w-full !py-3 bg-gradient-to-r from-sky-500 via-blue-500 to-indigo-500 !text-base tracking-wide text-white shadow-[0_20px_45px_-18px_rgba(56,189,248,0.7)] transition [box-shadow:0px_18px_35px_-20px_rgba(59,130,246,0.8)] hover:from-sky-400 hover:via-blue-500 hover:to-indigo-600 focus:!ring-sky-300/60"
-                      disabled={loading}
-                    >
-                      {loading ? 'กำลังตรวจสอบ...' : t('login')}
-                    </Button>
-                  </form>
-                  <p className="text-center text-xs text-slate-400">
-                    หากต้องการเปลี่ยนรหัสผ่านของแอดมิน สามารถดำเนินการได้ที่เมนู “ตั้งรหัสผ่านใหม่” และใช้รหัสผ่านใหม่ในการเข้าสู่ระบบถัดไป
-                  </p>
+                  ) : shouldShowMaintenanceView ? (
+                    <div className="space-y-5 text-center">
+                      <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-r from-sky-500 via-blue-500 to-indigo-500 shadow-lg shadow-blue-500/40">
+                        <LockClosedIcon className="h-10 w-10 text-white" />
+                      </div>
+                      <div className="space-y-3">
+                        <h3 className="text-2xl font-semibold text-white">{t('maintenanceModeTitle')}</h3>
+                        <p className="text-sm text-slate-300">{maintenanceMessage}</p>
+                        <p className="text-xs text-slate-400">{t('maintenanceAdminOnly')}</p>
+                        <p className="text-xs text-slate-500">
+                          {t('maintenanceYourIp')}{' '}
+                          <span className="font-mono text-slate-200">{clientIp && clientIp.length > 0 ? clientIp : '-'}</span>
+                        </p>
+                      </div>
+                      <Button onClick={() => window.location.reload()} className="w-full">
+                        {t('maintenanceRefresh')}
+                      </Button>
+                    </div>
+                  ) : (
+                    <>
+                      {maintenanceActive && ipAllowed && (
+                        <div className="rounded-xl border border-sky-500/30 bg-sky-500/10 p-4 text-left text-sm text-slate-200">
+                          <p className="text-xs font-semibold uppercase tracking-[0.4em] text-sky-200/90">
+                            {t('maintenanceModeTitle')}
+                          </p>
+                          <p className="mt-2 text-slate-200/80">{t('maintenanceAdminOnly')}</p>
+                        </div>
+                      )}
+                      <form onSubmit={handleSubmit} className="space-y-5">
+                        <Input
+                          id="username"
+                          label={t('username')}
+                          type="text"
+                          value={username}
+                          onChange={(e) => setUsername(e.target.value)}
+                          placeholder={t('username')}
+                          required
+                          disabled={loading}
+                          leftIcon={<UserIcon className="h-5 w-5" />}
+                          labelClassName="!text-slate-300"
+                          className="!bg-slate-900/60 !border-sky-500/30 !text-slate-100 placeholder:text-slate-500 focus:!border-sky-400 focus:!ring-sky-400/60"
+                        />
+                        <Input
+                          id="password"
+                          label={t('password')}
+                          type={showPassword ? 'text' : 'password'}
+                          value={password}
+                          onChange={(e) => setPassword(e.target.value)}
+                          placeholder="••••••••"
+                          required
+                          disabled={loading}
+                          leftIcon={<LockClosedIcon className="h-5 w-5" />}
+                          rightElement={
+                            <button
+                              type="button"
+                              onClick={() => setShowPassword((p) => !p)}
+                              className="text-slate-400 transition-colors hover:text-slate-200"
+                            >
+                              {showPassword ? <EyeSlashIcon className="h-5 w-5" /> : <EyeIcon className="h-5 w-5" />}
+                            </button>
+                          }
+                          labelClassName="!text-slate-300"
+                          className="!bg-slate-900/60 !border-sky-500/30 !text-slate-100 placeholder:text-slate-500 focus:!border-sky-400 focus:!ring-sky-400/60"
+                        />
+                        <div className="flex items-center justify-between text-sm text-slate-300">
+                          <label className="flex items-center gap-2">
+                            <input
+                              type="checkbox"
+                              className="h-4 w-4 rounded border-slate-500/60 bg-slate-900/80 accent-sky-500"
+                              checked={remember}
+                              onChange={(e) => setRemember(e.target.checked)}
+                            />
+                            {t('rememberMe')}
+                          </label>
+                          <a href="#" className="text-sky-300 transition-colors hover:text-sky-200">
+                            ลืมรหัสผ่าน?
+                          </a>
+                        </div>
+                        <Button
+                          type="submit"
+                          className="mt-2 w-full !py-3 bg-gradient-to-r from-sky-500 via-blue-500 to-indigo-500 !text-base tracking-wide text-white shadow-[0_20px_45px_-18px_rgba(56,189,248,0.7)] transition [box-shadow:0px_18px_35px_-20px_rgba(59,130,246,0.8)] hover:from-sky-400 hover:via-blue-500 hover:to-indigo-600 focus:!ring-sky-300/60"
+                          disabled={loading}
+                        >
+                          {loading ? 'กำลังตรวจสอบ...' : t('login')}
+                        </Button>
+                      </form>
+                      <p className="text-center text-xs text-slate-400">
+                        หากต้องการเปลี่ยนรหัสผ่านของแอดมิน สามารถดำเนินการได้ที่เมนู “ตั้งรหัสผ่านใหม่” และใช้รหัสผ่านใหม่ในการเข้าสู่ระบบถัดไป
+                      </p>
+                    </>
+                  )}
                 </CardContent>
               </div>
             </Card>

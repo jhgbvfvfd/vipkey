@@ -1,5 +1,5 @@
 
-import { Platform, Agent, Bot, ApiKey, StandaloneKey, KeyLog, IpBan } from '../types';
+import { Platform, Agent, Bot, ApiKey, StandaloneKey, KeyLog, IpBan, MaintenanceConfig } from '../types';
 
 // IMPORTANT: In a real application, these values should come from environment variables.
 // For this example, we are using the URL provided in the prompt.
@@ -186,4 +186,33 @@ export const addIpBan = async (userId: string, ip: string): Promise<void> => {
 
 export const deleteIpBan = async (userId: string, id: string): Promise<void> => {
     await deleteData(`ip_bans/${userId}/${id}`);
+};
+
+const defaultMaintenanceConfig: MaintenanceConfig = {
+    enabled: false,
+    message: 'ระบบกำลังปิดปรับปรุงเพื่ออัปเดต',
+    allowedAdminIps: [],
+};
+
+export const getMaintenanceConfig = async (): Promise<MaintenanceConfig> => {
+    try {
+        const data = await fetchData<MaintenanceConfig | null>('maintenance_config');
+        if (data) {
+            return {
+                ...defaultMaintenanceConfig,
+                ...data,
+                allowedAdminIps: Array.isArray(data.allowedAdminIps)
+                    ? data.allowedAdminIps.filter((ip) => typeof ip === 'string' && ip.trim().length > 0)
+                    : defaultMaintenanceConfig.allowedAdminIps,
+            };
+        }
+    } catch (error) {
+        console.error('Failed to fetch maintenance config:', error);
+    }
+
+    return { ...defaultMaintenanceConfig };
+};
+
+export const saveMaintenanceConfig = async (config: MaintenanceConfig): Promise<void> => {
+    await setData('maintenance_config', config);
 };

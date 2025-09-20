@@ -68,3 +68,11 @@ export interface IpBan {
     userId: string;
     createdAt: string;
 }
+
+export interface MaintenanceConfig {
+    enabled: boolean;
+    message?: string;
+    allowedAdminIps?: string[];
+    updatedAt?: string;
+    updatedBy?: string;
+}

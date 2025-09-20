@@ -23,8 +23,9 @@ import IpBanPage from './pages/IpBanPage';
 import AgentMenusPage from './pages/AgentMenusPage';
 import AgentGenerateKeyPage from './pages/AgentGenerateKeyPage';
 import AgentAgentsPage from './pages/AgentAgentsPage';
-import { Agent, Platform, Bot, StandaloneKey, KeyLog } from './types';
-import { getPlatforms, getAgents, getBots, getStandaloneKeys, getKeyLogs, getAdminPassword, setAdminPassword } from './services/firebaseService';
+import MaintenancePage from './pages/MaintenancePage';
+import { Agent, Platform, Bot, StandaloneKey, KeyLog, MaintenanceConfig } from './types';
+import { getPlatforms, getAgents, getBots, getStandaloneKeys, getKeyLogs, getAdminPassword, setAdminPassword, getMaintenanceConfig, saveMaintenanceConfig } from './services/firebaseService';
 
 type UserRole = 'admin' | 'agent';
 interface User {
@@ -32,10 +33,15 @@ interface User {
     data: Agent | { username: string };
 }
 
+interface LoginOptions {
+  clientIp?: string;
+  skipMaintenanceCheck?: boolean;
+}
+
 interface AuthContextType {
   isAuthenticated: boolean;
   user: User | null;
-  login: (username: string, password?: string) => Promise<'success' | 'banned' | 'invalid'>;
+  login: (username: string, password?: string, options?: LoginOptions) => Promise<'success' | 'banned' | 'invalid' | 'maintenance'>;
   logout: () => void;
   updateUserData: (data: Agent) => void;
 }
@@ -97,6 +103,84 @@ export const useSettings = () => {
     throw new Error('useSettings must be used within SettingsProvider');
   }
   return ctx;
+};
+
+interface MaintenanceContextType {
+  config: MaintenanceConfig;
+  loading: boolean;
+  refresh: () => Promise<void>;
+  update: (config: MaintenanceConfig) => Promise<void>;
+}
+
+const MaintenanceContext = createContext<MaintenanceContextType | null>(null);
+
+export const useMaintenance = () => {
+  const ctx = useContext(MaintenanceContext);
+  if (!ctx) {
+    throw new Error('useMaintenance must be used within MaintenanceProvider');
+  }
+  return ctx;
+};
+
+const defaultMaintenanceState: MaintenanceConfig = {
+  enabled: false,
+  message: 'ระบบกำลังปิดปรับปรุงเพื่ออัปเดต',
+  allowedAdminIps: [],
+};
+
+const sanitizeIps = (ips?: string[]): string[] => {
+  if (!Array.isArray(ips)) return [];
+  return ips
+    .map((ip) => (typeof ip === 'string' ? ip.trim() : ''))
+    .filter((ip) => ip.length > 0);
+};
+
+const MaintenanceProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [config, setConfig] = useState<MaintenanceConfig>(defaultMaintenanceState);
+  const [loading, setLoading] = useState(true);
+
+  const refresh = useCallback(async () => {
+    setLoading(true);
+    try {
+      const remote = await getMaintenanceConfig();
+      setConfig({
+        ...defaultMaintenanceState,
+        ...remote,
+        allowedAdminIps: sanitizeIps(remote.allowedAdminIps),
+      });
+    } catch (error) {
+      console.error('Failed to refresh maintenance config:', error);
+      setConfig(defaultMaintenanceState);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const update = useCallback(async (nextConfig: MaintenanceConfig) => {
+    const normalized: MaintenanceConfig = {
+      ...defaultMaintenanceState,
+      ...nextConfig,
+      allowedAdminIps: sanitizeIps(nextConfig.allowedAdminIps),
+    };
+    try {
+      await saveMaintenanceConfig(normalized);
+      setConfig(normalized);
+    } catch (error) {
+      console.error('Failed to save maintenance config:', error);
+      throw error;
+    }
+  }, []);
+
+  useEffect(() => {
+    refresh();
+  }, [refresh]);
+
+  const value = useMemo(
+    () => ({ config, loading, refresh, update }),
+    [config, loading, refresh, update]
+  );
+
+  return <MaintenanceContext.Provider value={value}>{children}</MaintenanceContext.Provider>;
 };
 
 const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -193,7 +277,23 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
         return storedUser ? JSON.parse(storedUser) : null;
     });
 
-    const login = useCallback(async (username: string, password?: string): Promise<'success' | 'banned' | 'invalid'> => {
+    const login = useCallback(async (username: string, password?: string, options?: LoginOptions): Promise<'success' | 'banned' | 'invalid' | 'maintenance'> => {
+        if (!options?.skipMaintenanceCheck) {
+            try {
+                const maintenance = await getMaintenanceConfig();
+                if (maintenance.enabled) {
+                    const allowedIps = sanitizeIps(maintenance.allowedAdminIps);
+                    const ipAllowed = options?.clientIp ? allowedIps.includes(options.clientIp.trim()) : false;
+                    const isAdminAttempt = username === 'admin';
+                    if (!isAdminAttempt || !ipAllowed) {
+                        return 'maintenance';
+                    }
+                }
+            } catch (error) {
+                console.error('Failed to check maintenance mode during login:', error);
+            }
+        }
+
         // Admin Login
         if (username === 'admin' && typeof password === 'string') {
             const { password: storedAdminPassword, source } = await getAdminPassword();
@@ -263,12 +363,14 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
 const App: React.FC = () => {
   return (
     <SettingsProvider>
-      <AuthProvider>
-        <DataProvider>
-          <AppRoutes />
-          <Toaster position="top-right" />
-        </DataProvider>
-      </AuthProvider>
+      <MaintenanceProvider>
+        <AuthProvider>
+          <DataProvider>
+            <AppRoutes />
+            <Toaster position="top-right" />
+          </DataProvider>
+        </AuthProvider>
+      </MaintenanceProvider>
     </SettingsProvider>
   );
 };
@@ -308,6 +410,7 @@ const AdminRoutes: React.FC = () => (
         <Route path="/bots" element={<BotsPage />} />
         <Route path="/api-guide" element={<ApiGuidePage />} />
         <Route path="/reports" element={<ReportsPage />} />
+        <Route path="/maintenance" element={<MaintenancePage />} />
         <Route path="/logs" element={<KeyLogsPage />} />
         <Route path="/ip-bans" element={<IpBanPage />} />
         <Route path="/settings" element={<SettingsPage />} />
