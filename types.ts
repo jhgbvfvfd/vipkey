@@ -27,6 +27,8 @@ export interface Agent {
   status?: 'active' | 'suspended' | 'banned';
   ipBanEnabled?: boolean;
   parentId?: string;
+  welcomeAcknowledged?: boolean;
+  welcomeAcknowledgedAt?: string;
 }
 
 export interface StandaloneKey extends ApiKey {

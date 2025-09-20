@@ -63,9 +63,7 @@ const AgentSidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
         <div>
             <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center">
-                <div className="w-10 h-10 p-2 bg-blue-600 text-white rounded-lg mr-3 flex items-center justify-center">
-                    <Logo className="w-6 h-6" />
-                </div>
+                <Logo className="mr-3 h-12 w-12 shadow-lg shadow-blue-200/60" />
                 <h1 className="text-lg font-bold text-slate-800">Key Master</h1>
                 </div>
                 <button onClick={() => setIsOpen(false)} className="md:hidden text-slate-400 hover:text-slate-600">

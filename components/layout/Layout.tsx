@@ -1,10 +1,12 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import AdminSidebar from './Sidebar';
 import AgentSidebar from './AgentSidebar';
 import { useAuth } from '../../App';
 import { Agent } from '../../types';
 import Modal from '../ui/Modal';
 import Button from '../ui/Button';
+import Logo from '../ui/Logo';
+import { updateAgent } from '../../services/firebaseService';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -65,8 +67,37 @@ const CreditHistoryModal: React.FC<{isOpen: boolean, onClose: () => void, agent:
 const Layout: React.FC<LayoutProps> = ({ children }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isHistoryModalOpen, setHistoryModalOpen] = useState(false);
-  const { user } = useAuth();
+  const [showWelcomeModal, setShowWelcomeModal] = useState(false);
+  const [acknowledging, setAcknowledging] = useState(false);
+  const { user, updateUserData } = useAuth();
   const agent = user?.role === 'agent' ? user.data as Agent : null;
+
+  useEffect(() => {
+    if (agent && !agent.welcomeAcknowledged) {
+      setShowWelcomeModal(true);
+    } else {
+      setShowWelcomeModal(false);
+    }
+  }, [agent?.id, agent?.welcomeAcknowledged]);
+
+  const handleWelcomeAcknowledge = async () => {
+    if (!agent || acknowledging) return;
+    setAcknowledging(true);
+    try {
+      const updatedAgent: Agent = {
+        ...agent,
+        welcomeAcknowledged: true,
+        welcomeAcknowledgedAt: new Date().toISOString(),
+      };
+      await updateAgent(updatedAgent);
+      updateUserData(updatedAgent);
+      setShowWelcomeModal(false);
+    } catch (error) {
+      console.error('Failed to acknowledge agent welcome guide:', error);
+    } finally {
+      setAcknowledging(false);
+    }
+  };
 
   return (
     <>
@@ -97,11 +128,54 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                     </div>
                 )}
             </header>
-            <main className="flex-1 p-3 md:p-4 overflow-y-auto">
-                {children}
+            <main className="flex-1 p-3 md:p-4 overflow-y-auto overflow-x-hidden">
+                <div className="mx-auto w-full max-w-3xl">
+                    {children}
+                </div>
             </main>
         </div>
         </div>
+        <Modal
+          isOpen={showWelcomeModal}
+          onClose={() => {}}
+          title="ยินดีต้อนรับสู่ ADMIN BOT CSCODE"
+          disableBackdropClose
+          showCloseButton={false}
+        >
+          <div className="space-y-4 text-center">
+            <div className="mx-auto h-20 w-20 rounded-3xl bg-gradient-to-br from-sky-400 via-blue-500 to-indigo-500 p-[2px] shadow-lg">
+              <div className="flex h-full w-full items-center justify-center rounded-[26px] bg-white">
+                <Logo className="h-14 w-14" />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <p className="text-xs font-semibold uppercase tracking-[0.45em] text-sky-500">Agent Access</p>
+              <h3 className="text-2xl font-bold text-slate-900">พร้อมเริ่มภารกิจของคุณแล้ว</h3>
+              <p className="text-sm text-slate-600">
+                นี่คือคู่มือย่อสำหรับตัวแทนใหม่ โปรดอ่านให้ครบและกด "พร้อมเริ่มใช้งาน" เพื่อเข้าสู่ระบบควบคุม
+              </p>
+            </div>
+            <div className="rounded-2xl border border-slate-100 bg-slate-50 p-4 text-left text-sm text-slate-600">
+              <ul className="space-y-2">
+                <li className="flex items-start gap-3">
+                  <span className="mt-1 inline-block h-2 w-2 rounded-full bg-sky-500"></span>
+                  <span>ใช้บัญชีนี้เฉพาะการสร้างและจัดการคีย์ตามสิทธิ์ที่ได้รับ</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <span className="mt-1 inline-block h-2 w-2 rounded-full bg-blue-500"></span>
+                  <span>ตรวจสอบยอดเครดิตก่อนสร้างคีย์ทุกครั้ง เพื่อป้องกันการใช้เกินกำหนด</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <span className="mt-1 inline-block h-2 w-2 rounded-full bg-indigo-500"></span>
+                  <span>หากพบปัญหาในการใช้งาน ให้ติดต่อผู้ดูแลระบบทันทีเพื่อป้องกันการระงับบัญชี</span>
+                </li>
+              </ul>
+            </div>
+            <Button onClick={handleWelcomeAcknowledge} disabled={acknowledging} className="w-full">
+              {acknowledging ? 'กำลังบันทึก...' : 'พร้อมเริ่มใช้งาน'}
+            </Button>
+          </div>
+        </Modal>
         {agent && <CreditHistoryModal isOpen={isHistoryModalOpen} onClose={() => setHistoryModalOpen(false)} agent={agent} />}
     </>
   );

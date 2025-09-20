@@ -10,6 +10,9 @@ import Modal from '../components/ui/Modal';
 import Input from '../components/ui/Input';
 import { MagnifyingGlassIcon } from '@heroicons/react/24/outline';
 
+const DEFAULT_NEW_AGENT_CREDITS = 1000;
+const DEFAULT_CREDIT_INCREMENT = 100;
+
 const AgentCard: React.FC<{
     agent: Agent;
     onViewHistory: (agent: Agent) => void;
@@ -23,21 +26,33 @@ const AgentCard: React.FC<{
 
     return (
         <Card>
-            <CardHeader className="flex justify-between items-start">
-                <div>
-                    <CardTitle className={agent.status === 'banned' ? 'text-red-600' : undefined}>{agent.username}</CardTitle>
-                    <p className="text-xs text-slate-400 font-mono mt-1">{agent.id}</p>
+            <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                <div className="min-w-0">
+                    <CardTitle className={`${agent.status === 'banned' ? 'text-red-600' : ''} break-words`}>{agent.username}</CardTitle>
+                    <p className="mt-1 text-xs font-mono text-slate-400 break-all">{agent.id}</p>
                 </div>
-                <div className="flex items-start gap-2">
-                    <div className="text-right">
-                        <p className="text-2xl font-bold text-blue-600">{agent.credits.toLocaleString()}</p>
-                        <p className="text-xs text-slate-500">เครดิตคงเหลือ</p>
+                <div className="flex w-full flex-wrap items-start justify-between gap-3 sm:w-auto sm:flex-nowrap sm:justify-end">
+                    <div className="min-w-0 text-left sm:text-right">
+                        <p className="text-lg font-bold leading-tight text-blue-600 break-words sm:text-2xl">
+                            {agent.credits.toLocaleString()}
+                        </p>
+                        <p className="text-xs text-slate-500 sm:whitespace-nowrap">เครดิตคงเหลือ</p>
                     </div>
-                    <div className="flex flex-col gap-1">
-                        <Button size="sm" variant={agent.status === 'banned' ? 'secondary' : 'danger'} onClick={() => onBan(agent)}>
+                    <div className="flex w-full shrink-0 flex-wrap justify-end gap-2 sm:w-auto sm:flex-col sm:gap-1">
+                        <Button
+                            size="sm"
+                            variant={agent.status === 'banned' ? 'secondary' : 'danger'}
+                            onClick={() => onBan(agent)}
+                            className="flex-1 sm:flex-none"
+                        >
                             {agent.status === 'banned' ? 'ปลดแบน' : 'แบน'}
                         </Button>
-                        <Button size="sm" variant="danger" onClick={() => onDelete(agent)}>
+                        <Button
+                            size="sm"
+                            variant="danger"
+                            onClick={() => onDelete(agent)}
+                            className="flex-1 sm:flex-none"
+                        >
                             ลบ
                         </Button>
                     </div>
@@ -185,8 +200,8 @@ const AgentsPage: React.FC = () => {
     const [isKeysModalOpen, setKeysModalOpen] = useState(false);
     const [isAddCreditsModalOpen, setAddCreditsModalOpen] = useState(false);
     const [selectedAgent, setSelectedAgent] = useState<Agent | null>(null);
-    const [newAgentData, setNewAgentData] = useState({ username: '', password: '', credits: 1000 });
-    const [creditsToAdd, setCreditsToAdd] = useState(100);
+    const [newAgentData, setNewAgentData] = useState({ username: '', password: '', credits: DEFAULT_NEW_AGENT_CREDITS });
+    const [creditsToAdd, setCreditsToAdd] = useState(DEFAULT_CREDIT_INCREMENT);
     const [error, setError] = useState('');
     const [query, setQuery] = useState('');
 
@@ -205,7 +220,12 @@ const AgentsPage: React.FC = () => {
         try {
             const newId = `agent_${Date.now()}`;
             const initialCredits = Number(newAgentData.credits);
-            
+
+            if (!Number.isFinite(initialCredits) || initialCredits <= 0) {
+                setError('กรุณากรอกจำนวนเครดิตมากกว่า 0');
+                return;
+            }
+
             const initialHistoryEntry: CreditHistoryEntry = {
                 date: new Date().toISOString(),
                 action: 'เครดิตเริ่มต้น',
@@ -222,10 +242,11 @@ const AgentsPage: React.FC = () => {
                 keys: {},
                 creditHistory: [initialHistoryEntry],
                 status: 'active',
+                welcomeAcknowledged: false,
             });
             refreshData();
             setAddAgentModalOpen(false);
-            setNewAgentData({ username: '', password: '', credits: 1000 });
+            setNewAgentData({ username: '', password: '', credits: DEFAULT_NEW_AGENT_CREDITS });
             notify('สร้างตัวแทนเรียบร้อย');
         } catch (err) {
             setError('ไม่สามารถเพิ่มตัวแทนได้');
@@ -246,14 +267,17 @@ const AgentsPage: React.FC = () => {
     
     const handleOpenAddCredits = (agent: Agent) => {
         setSelectedAgent(agent);
-        setCreditsToAdd(100);
+        setCreditsToAdd(DEFAULT_CREDIT_INCREMENT);
         setAddCreditsModalOpen(true);
     };
 
     const handleAddCredits = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!selectedAgent || creditsToAdd <= 0) return;
-
+        if (!selectedAgent) return;
+        if (!Number.isFinite(creditsToAdd) || creditsToAdd <= 0) {
+            notify('กรุณาระบุจำนวนเครดิตมากกว่า 0', 'error');
+            return;
+        }
         try {
             const updatedAgent = JSON.parse(JSON.stringify(selectedAgent));
             const newBalance = updatedAgent.credits + creditsToAdd;
@@ -332,7 +356,21 @@ const AgentsPage: React.FC = () => {
                  <form onSubmit={handleAddAgent} className="space-y-4">
                     <Input label="ชื่อผู้ใช้" placeholder="เช่น agent_007" value={newAgentData.username} onChange={e => setNewAgentData({...newAgentData, username: e.target.value})} required />
                     <Input label="รหัสผ่าน" type="password" placeholder="ตั้งรหัสผ่านสำหรับตัวแทน" value={newAgentData.password} onChange={e => setNewAgentData({...newAgentData, password: e.target.value})} required />
-                    <Input label="เครดิตเริ่มต้น" type="number" placeholder="เช่น 1000" value={newAgentData.credits} onChange={e => setNewAgentData({...newAgentData, credits: Number(e.target.value)})} required />
+                    <Input
+                        label="เครดิตเริ่มต้น"
+                        type="number"
+                        placeholder="เช่น 1000"
+                        value={newAgentData.credits}
+                        min={0}
+                        onChange={e => {
+                            const value = Number(e.target.value);
+                            setNewAgentData({
+                                ...newAgentData,
+                                credits: Math.max(0, Number.isFinite(value) ? value : 0),
+                            });
+                        }}
+                        required
+                    />
                     {error && <p className="text-red-500 text-sm">{error}</p>}
                     <div className="flex justify-end gap-3 pt-4">
                         <Button type="button" variant="secondary" onClick={() => setAddAgentModalOpen(false)}>ยกเลิก</Button>
@@ -346,8 +384,19 @@ const AgentsPage: React.FC = () => {
                     <div>
                         <p className="text-sm text-slate-600">เครดิตปัจจุบัน: <span className="font-bold text-blue-600">{selectedAgent?.credits.toLocaleString()}</span></p>
                     </div>
-                    <Input label="จำนวนเครดิตที่ต้องการเพิ่ม" type="number" placeholder="เช่น 500" value={creditsToAdd} onChange={e => setCreditsToAdd(Number(e.target.value))} required />
-                    
+                    <Input
+                        label="จำนวนเครดิตที่ต้องการเพิ่ม"
+                        type="number"
+                        placeholder="เช่น 500"
+                        value={creditsToAdd}
+                        min={0}
+                        onChange={e => {
+                            const value = Number(e.target.value);
+                            setCreditsToAdd(Math.max(0, Number.isFinite(value) ? value : 0));
+                        }}
+                        required
+                    />
+
                     <div className="flex justify-end gap-3 pt-4">
                         <Button type="button" variant="secondary" onClick={() => setAddCreditsModalOpen(false)}>ยกเลิก</Button>
                         <Button type="submit">ยืนยันการเติม</Button>

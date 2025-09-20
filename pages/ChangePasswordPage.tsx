@@ -3,7 +3,7 @@ import { useAuth, useSettings } from '../App';
 import Input from '../components/ui/Input';
 import Button from '../components/ui/Button';
 import Card, { CardHeader, CardTitle, CardContent } from '../components/ui/Card';
-import { updateAgent } from '../services/firebaseService';
+import { getAdminPassword, setAdminPassword, updateAgent } from '../services/firebaseService';
 import { Agent } from '../types';
 
 const ChangePasswordPage: React.FC = () => {
@@ -24,12 +24,17 @@ const ChangePasswordPage: React.FC = () => {
     }
     setLoading(true);
     if (user?.role === 'admin') {
-      const storedAdminPassword = localStorage.getItem('adminPassword') || 'admin';
-      if (current !== storedAdminPassword) {
-        notify('รหัสผ่านปัจจุบันไม่ถูกต้อง', 'error');
-      } else {
-        localStorage.setItem('adminPassword', newPassword);
-        notify('เปลี่ยนรหัสผ่านแล้ว');
+      try {
+        const { password: storedAdminPassword } = await getAdminPassword();
+        if (current !== storedAdminPassword) {
+          notify('รหัสผ่านปัจจุบันไม่ถูกต้อง', 'error');
+        } else {
+          await setAdminPassword(newPassword);
+          notify('เปลี่ยนรหัสผ่านแล้ว');
+        }
+      } catch (error) {
+        console.error('Failed to update admin password:', error);
+        notify('ไม่สามารถบันทึกรหัสผ่านใหม่ได้ โปรดลองอีกครั้ง', 'error');
       }
     } else if (agent) {
       if (current !== agent.password) {
@@ -54,6 +59,11 @@ const ChangePasswordPage: React.FC = () => {
           <CardTitle>ตั้งรหัสผ่านใหม่</CardTitle>
         </CardHeader>
         <CardContent>
+          {user?.role === 'admin' && (
+            <p className="mb-4 text-xs text-slate-500">
+              ชื่อผู้ใช้ของผู้ดูแลระบบจะยังคงเป็น <span className="font-semibold text-slate-700">admin</span> ระบบจะจดจำเฉพาะรหัสผ่านใหม่ที่ตั้งในหน้านี้
+            </p>
+          )}
           <form onSubmit={handleSubmit} className="space-y-4">
             <Input
               id="current"

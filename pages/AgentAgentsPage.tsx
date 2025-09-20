@@ -7,6 +7,8 @@ import Modal from '../components/ui/Modal';
 import Input from '../components/ui/Input';
 import { addAgent, updateAgent, deleteAgent } from '../services/firebaseService';
 
+const MAX_CREDIT_TRANSFER = 1_000_000;
+
 const AgentAgentsPage: React.FC = () => {
   const { agents, refreshData } = useData();
   const { user, updateUserData } = useAuth();
@@ -23,6 +25,14 @@ const AgentAgentsPage: React.FC = () => {
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     const initialCredits = newAgent.credits;
+    if (!Number.isFinite(initialCredits) || initialCredits <= 0) {
+      notify('กรุณากรอกเครดิตเริ่มต้นมากกว่า 0', 'error');
+      return;
+    }
+    if (initialCredits > MAX_CREDIT_TRANSFER) {
+      notify(`โอนเครดิตได้ไม่เกิน ${MAX_CREDIT_TRANSFER.toLocaleString('th-TH')} ต่อครั้ง`, 'error');
+      return;
+    }
     if (parent.credits < initialCredits) {
       notify('เครดิตไม่พอ', 'error');
       return;
@@ -53,6 +63,7 @@ const AgentAgentsPage: React.FC = () => {
       creditHistory: [childHistory],
       status: 'active',
       parentId: parent.id,
+      welcomeAcknowledged: false,
     });
     const updatedParent: Agent = {
       ...parent,
@@ -69,13 +80,21 @@ const AgentAgentsPage: React.FC = () => {
 
   const openAddCredits = (agent: Agent) => {
     setSelected(agent);
-    setCreditsToAdd(100);
+    setCreditsToAdd(Math.min(100, MAX_CREDIT_TRANSFER));
     setCreditModal(true);
   };
 
   const handleAddCredits = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selected) return;
+    if (!Number.isFinite(creditsToAdd) || creditsToAdd <= 0) {
+      notify('กรุณาระบุจำนวนเครดิตมากกว่า 0', 'error');
+      return;
+    }
+    if (creditsToAdd > MAX_CREDIT_TRANSFER) {
+      notify(`โอนเครดิตได้ไม่เกิน ${MAX_CREDIT_TRANSFER.toLocaleString('th-TH')} ต่อครั้ง`, 'error');
+      return;
+    }
     if (parent.credits < creditsToAdd) {
       notify('เครดิตไม่พอ', 'error');
       return;
@@ -138,14 +157,14 @@ const AgentAgentsPage: React.FC = () => {
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {myAgents.map(a => (
             <Card key={a.id}>
-              <CardHeader className="flex justify-between items-start">
-                <div>
-                  <CardTitle className={a.status === 'banned' ? 'text-red-600' : undefined}>{a.username}</CardTitle>
-                  <p className="text-xs text-slate-400 font-mono mt-1">{a.id}</p>
+              <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                <div className="min-w-0">
+                  <CardTitle className={`${a.status === 'banned' ? 'text-red-600' : ''} break-words`}>{a.username}</CardTitle>
+                  <p className="mt-1 text-xs font-mono text-slate-400 break-all">{a.id}</p>
                 </div>
-                <div className="text-right">
-                  <p className="text-xl font-bold text-blue-600">{a.credits.toLocaleString()}</p>
-                  <p className="text-xs text-slate-500">เครดิต</p>
+                <div className="min-w-0 text-left sm:text-right">
+                  <p className="text-lg font-bold leading-tight text-blue-600 break-words sm:text-xl">{a.credits.toLocaleString()}</p>
+                  <p className="text-xs text-slate-500 sm:whitespace-nowrap">เครดิต</p>
                 </div>
               </CardHeader>
               <CardContent>
@@ -166,7 +185,21 @@ const AgentAgentsPage: React.FC = () => {
         <form onSubmit={handleCreate} className="space-y-4">
           <Input label="ชื่อผู้ใช้" value={newAgent.username} onChange={e => setNewAgent({ ...newAgent, username: e.target.value })} required />
           <Input label="รหัสผ่าน" type="password" value={newAgent.password} onChange={e => setNewAgent({ ...newAgent, password: e.target.value })} required />
-          <Input label="เครดิตเริ่มต้น" type="number" value={newAgent.credits} onChange={e => setNewAgent({ ...newAgent, credits: Number(e.target.value) })} required />
+          <Input
+            label="เครดิตเริ่มต้น"
+            type="number"
+            value={newAgent.credits}
+            min={0}
+            max={MAX_CREDIT_TRANSFER}
+            onChange={e => {
+              const value = Number(e.target.value);
+              setNewAgent({
+                ...newAgent,
+                credits: Math.max(0, Math.min(MAX_CREDIT_TRANSFER, Number.isFinite(value) ? value : 0)),
+              });
+            }}
+            required
+          />
           <div className="flex justify-end gap-2">
             <Button type="button" variant="secondary" onClick={() => setAddModal(false)}>ยกเลิก</Button>
             <Button type="submit">บันทึก</Button>
@@ -176,7 +209,18 @@ const AgentAgentsPage: React.FC = () => {
 
       <Modal isOpen={isCreditModal} onClose={() => setCreditModal(false)} title="เติมเครดิต">
         <form onSubmit={handleAddCredits} className="space-y-4">
-          <Input label="จำนวนเครดิต" type="number" value={creditsToAdd} onChange={e => setCreditsToAdd(Number(e.target.value))} required />
+          <Input
+            label="จำนวนเครดิต"
+            type="number"
+            value={creditsToAdd}
+            min={0}
+            max={MAX_CREDIT_TRANSFER}
+            onChange={e => {
+              const value = Number(e.target.value);
+              setCreditsToAdd(Math.max(0, Math.min(MAX_CREDIT_TRANSFER, Number.isFinite(value) ? value : 0)));
+            }}
+            required
+          />
           <div className="flex justify-end gap-2">
             <Button type="button" variant="secondary" onClick={() => setCreditModal(false)}>ยกเลิก</Button>
             <Button type="submit">เติม</Button>

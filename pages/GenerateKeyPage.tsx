@@ -47,9 +47,9 @@ const KeyRow: React.FC<{
 
     return (
         <tr className="border-b border-slate-200 last:border-b-0 odd:bg-white even:bg-slate-50 hover:bg-slate-100">
-            <td className="p-2 font-mono text-sm text-blue-600">{apiKey.key}</td>
-            <td className="p-2 text-slate-600">{apiKey.tokens_remaining.toLocaleString()}</td>
-            <td className="p-2">
+            <td className="p-2 font-mono text-xs sm:text-sm text-blue-600 break-all">{apiKey.key}</td>
+            <td className="p-2 text-right text-xs sm:text-sm text-slate-600 whitespace-nowrap">{apiKey.tokens_remaining.toLocaleString()}</td>
+            <td className="p-2 whitespace-nowrap">
                 {(() => {
                     const statusKey = apiKey.tokens_remaining <= 0
                         ? 'statusNoTokens'
@@ -76,7 +76,7 @@ const KeyRow: React.FC<{
                     );
                 })()}
             </td>
-            <td className="p-2 text-slate-600">{new Date(apiKey.createdAt).toLocaleDateString('th-TH')}</td>
+            <td className="p-2 text-xs sm:text-sm text-slate-600 whitespace-nowrap">{new Date(apiKey.createdAt).toLocaleDateString('th-TH')}</td>
             <td className="p-2 text-center">
                 <div className="inline-flex items-center justify-center gap-1">
                     <button
@@ -123,6 +123,9 @@ const GenerateKeyPage: React.FC = () => {
     const [keyToDelete, setKeyToDelete] = useState<StandaloneKey | null>(null);
     const [generatedKey, setGeneratedKey] = useState('');
     const [selectedPlatformId, setSelectedPlatformId] = useState(platforms[0]?.id || '');
+    const [activeMenu, setActiveMenu] = useState<'create' | 'manage'>('create');
+    const MIN_TOKENS = 1;
+    const MAX_TOKENS = 1000;
     const [tokens, setTokens] = useState(100);
     const [error, setError] = useState('');
 
@@ -140,12 +143,18 @@ const GenerateKeyPage: React.FC = () => {
             return;
         }
 
+        const cost = Number(tokens);
+        if (!Number.isFinite(cost) || cost < MIN_TOKENS || cost > MAX_TOKENS) {
+            setError(`กำหนดโทเค็นได้ระหว่าง ${MIN_TOKENS} - ${MAX_TOKENS}`);
+            return;
+        }
+
         try {
             const newKeyString = generateKey(platform.prefix, platform.pattern);
             const newKeyObject: Omit<StandaloneKey, 'id'> & { id: string } = {
                 id: `key_${Date.now()}`,
                 key: newKeyString,
-                tokens_remaining: Number(tokens),
+                tokens_remaining: cost,
                 status: 'active',
                 createdAt: new Date().toISOString(),
                 platformId: platform.id,
@@ -155,6 +164,7 @@ const GenerateKeyPage: React.FC = () => {
             refreshData();
             setGeneratedKey(newKeyString);
             setIsModalOpen(true);
+            setActiveMenu('manage');
             notify('สร้างคีย์เรียบร้อย');
         } catch (err) {
             setError('ไม่สามารถสร้างคีย์ได้');
@@ -207,50 +217,105 @@ const GenerateKeyPage: React.FC = () => {
 
     return (
         <div className="space-y-6">
-            <PlatformTabs platforms={platforms} selected={selectedPlatformId} onSelect={setSelectedPlatformId} />
-            <Card className="max-w-xl">
-                <CardHeader>
-                    <CardTitle>สร้างคีย์ใหม่</CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <form onSubmit={handleGenerateKey} className="space-y-4">
-                        <Input label="โทเค็น" type="number" value={tokens} onChange={e => setTokens(Number(e.target.value))} required />
-                        {error && <p className="text-red-500 text-sm">{error}</p>}
-                        <div className="flex justify-end pt-2">
-                            <Button type="submit" disabled={platforms.length === 0}>สร้าง</Button>
-                        </div>
-                    </form>
-                </CardContent>
-            </Card>
-
-            <Card>
-                <CardHeader>
-                    <CardTitle>คีย์ที่สร้างแล้ว</CardTitle>
-                </CardHeader>
-                <div className="overflow-x-auto">
-                    <table className="w-full text-left text-sm">
-                        <thead className="bg-slate-50 text-slate-500">
-                            <tr>
-                                <th className="p-2 font-semibold">คีย์</th>
-                                <th className="p-2 font-semibold">โทเค็น</th>
-                                <th className="p-2 font-semibold">สถานะ</th>
-                                <th className="p-2 font-semibold">วันที่สร้าง</th>
-                                <th className="p-2 font-semibold text-center">จัดการ</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {loading ? (
-                                <tr><td colSpan={5} className="text-center p-4">กำลังโหลดคีย์...</td></tr>
-                            ) : filteredKeys.length > 0 ? (
-                                filteredKeys.map(k => <KeyRow key={k.id} apiKey={k} onUpdateStatus={handleUpdateKeyStatus} onDelete={confirmDeleteKey} />)
-                            ) : (
-                                <tr><td colSpan={5} className="text-center p-6 text-slate-500">ยังไม่มีการสร้างคีย์ทั่วไป</td></tr>
-                            )}
-                        </tbody>
-                    </table>
+            <div className="md:hidden">
+                <div className="flex items-center rounded-full border border-slate-200 bg-white p-1 text-sm font-medium text-slate-500 shadow-sm">
+                    <button
+                        className={`flex-1 rounded-full px-3 py-2 transition-colors ${activeMenu === 'create' ? 'bg-blue-500 text-white shadow' : 'hover:text-slate-700'}`}
+                        onClick={() => setActiveMenu('create')}
+                    >
+                        สร้างคีย์
+                    </button>
+                    <button
+                        className={`flex-1 rounded-full px-3 py-2 transition-colors ${activeMenu === 'manage' ? 'bg-blue-500 text-white shadow' : 'hover:text-slate-700'}`}
+                        onClick={() => setActiveMenu('manage')}
+                    >
+                        จัดการคีย์ที่สร้าง
+                    </button>
                 </div>
-            </Card>
-            
+            </div>
+            <div className="grid gap-6 md:grid-cols-2 md:items-start">
+                <div className={`${activeMenu === 'create' ? 'block' : 'hidden'} md:block`}>
+                    <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-md space-y-6">
+                        <div className="space-y-2">
+                            <p className="text-xs uppercase tracking-[0.45em] text-blue-500 font-semibold animate-fade-up">ADMIN BOT</p>
+                            <h1 className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-500 via-sky-500 to-cyan-400 animate-gradient-x">CSCODE</h1>
+                            <p className="text-sm text-slate-500">
+                                ศูนย์ควบคุมการสร้างคีย์ที่ออกแบบมาเพื่อให้คุณทำงานได้รวดเร็วในทุกอุปกรณ์
+                            </p>
+                        </div>
+
+                        <div className="rounded-2xl border border-slate-100 bg-white/80 p-4 shadow-inner">
+                            <div className="space-y-3">
+                                <p className="text-xs uppercase tracking-[0.3em] text-blue-500 font-semibold">เลือกแพลตฟอร์ม</p>
+                                <h2 className="text-lg font-semibold text-slate-800">เลือกแพลตฟอร์มสำหรับสร้างคีย์ของคุณ</h2>
+                                <div className="pt-1">
+                                    <PlatformTabs platforms={platforms} selected={selectedPlatformId} onSelect={setSelectedPlatformId} />
+                                </div>
+                            </div>
+                        </div>
+
+                        <Card className="shadow-md">
+                            <CardHeader className="bg-slate-50/80">
+                                <CardTitle>สร้างคีย์ใหม่</CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <form onSubmit={handleGenerateKey} className="space-y-4">
+                                    <div className="space-y-1">
+                                        <Input
+                                            label="จำนวนโทเค็นต่อคีย์"
+                                            type="number"
+                                            min={MIN_TOKENS}
+                                            max={MAX_TOKENS}
+                                            step={1}
+                                            value={tokens}
+                                            onChange={e => setTokens(Number(e.target.value))}
+                                            required
+                                        />
+                                        <p className="text-xs text-slate-500">
+                                            กำหนดได้ระหว่าง {MIN_TOKENS.toLocaleString()} - {MAX_TOKENS.toLocaleString()} โทเค็นต่อคีย์
+                                        </p>
+                                    </div>
+                                    {error && <p className="text-red-500 text-sm">{error}</p>}
+                                    <div className="flex justify-end pt-2">
+                                        <Button type="submit" disabled={platforms.length === 0}>สร้าง</Button>
+                                    </div>
+                                </form>
+                            </CardContent>
+                        </Card>
+                    </div>
+                </div>
+
+                <div className={`${activeMenu === 'manage' ? 'block' : 'hidden'} md:block`}>
+                    <Card className="h-full mx-auto max-w-md sm:max-w-lg md:max-w-none md:mx-0">
+                        <CardHeader>
+                            <CardTitle>คีย์ที่สร้างแล้ว</CardTitle>
+                        </CardHeader>
+                        <div className="overflow-x-auto">
+                            <table className="w-full table-fixed text-left text-sm">
+                                <thead className="bg-slate-50 text-slate-500">
+                                    <tr>
+                                        <th className="w-40 p-2 text-xs font-semibold sm:text-sm">คีย์</th>
+                                        <th className="w-16 p-2 text-xs font-semibold sm:text-sm text-right">โทเค็น</th>
+                                        <th className="w-24 p-2 text-xs font-semibold sm:text-sm">สถานะ</th>
+                                        <th className="w-28 p-2 text-xs font-semibold sm:text-sm">วันที่สร้าง</th>
+                                        <th className="p-2 text-center text-xs font-semibold sm:text-sm">จัดการ</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {loading ? (
+                                        <tr><td colSpan={5} className="text-center p-4">กำลังโหลดคีย์...</td></tr>
+                                    ) : filteredKeys.length > 0 ? (
+                                        filteredKeys.map(k => <KeyRow key={k.id} apiKey={k} onUpdateStatus={handleUpdateKeyStatus} onDelete={confirmDeleteKey} />)
+                                    ) : (
+                                        <tr><td colSpan={5} className="text-center p-6 text-slate-500">ยังไม่มีการสร้างคีย์ทั่วไป</td></tr>
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
+                    </Card>
+                </div>
+            </div>
+
             <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="สร้างคีย์สำเร็จ">
                 <div>
                     <p className="text-slate-600 mb-4">คัดลอกคีย์ด้านล่างนี้ คีย์จะแสดงเพียงครั้งเดียวเท่านั้น</p>
