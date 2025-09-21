@@ -1,5 +1,5 @@
 
-import React, { useState, useCallback, useMemo, createContext, useContext, useEffect } from 'react';
+import React, { useState, useCallback, useMemo, createContext, useContext, useEffect, useRef } from 'react';
 import { Toaster, toast } from 'react-hot-toast';
 import { translations, Language } from './utils/i18n';
 import { HashRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
@@ -26,7 +26,7 @@ import AgentGenerateKeyPage from './pages/AgentGenerateKeyPage';
 import AgentAgentsPage from './pages/AgentAgentsPage';
 import MaintenancePage from './pages/MaintenancePage';
 import { Agent, Platform, Bot, StandaloneKey, KeyLog, MaintenanceConfig, Application } from './types';
-import { getPlatforms, getAgents, getBots, getApplications, getStandaloneKeys, getKeyLogs, getAdminPassword, setAdminPassword, getMaintenanceConfig, saveMaintenanceConfig } from './services/firebaseService';
+import { getPlatforms, getAgents, getBots, getApplications, getStandaloneKeys, getKeyLogs, getAdminPassword, setAdminPassword, getMaintenanceConfig, saveMaintenanceConfig, deleteAgent } from './services/firebaseService';
 
 type UserRole = 'admin' | 'agent';
 interface User {
@@ -321,6 +321,62 @@ const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
     const [standaloneKeys, setStandaloneKeys] = useState<StandaloneKey[]>([]);
     const [keyLogs, setKeyLogs] = useState<KeyLog[]>([]);
     const [loading, setLoading] = useState(true);
+    const expiryTimers = useRef<Map<string, number>>(new Map());
+
+    const clearExpiryTimer = useCallback((agentId: string) => {
+        if (typeof window === 'undefined') {
+            return;
+        }
+        const existingTimer = expiryTimers.current.get(agentId);
+        if (existingTimer) {
+            window.clearTimeout(existingTimer);
+            expiryTimers.current.delete(agentId);
+        }
+    }, []);
+
+    const scheduleAgentExpiry = useCallback((agent: Agent) => {
+        if (typeof window === 'undefined') {
+            return;
+        }
+
+        clearExpiryTimer(agent.id);
+
+        if (!agent.expiresAt) {
+            return;
+        }
+
+        const expiresAt = new Date(agent.expiresAt).getTime();
+        if (Number.isNaN(expiresAt)) {
+            return;
+        }
+
+        const delay = expiresAt - Date.now();
+
+        if (delay <= 0) {
+            deleteAgent(agent.id)
+                .catch((error) => {
+                    console.error('Failed to auto delete expired agent:', error);
+                })
+                .finally(() => {
+                    setAgents((prev) => prev.filter((existing) => existing.id !== agent.id));
+                    clearExpiryTimer(agent.id);
+                });
+            return;
+        }
+
+        const timeoutId = window.setTimeout(async () => {
+            try {
+                await deleteAgent(agent.id);
+            } catch (error) {
+                console.error('Failed to auto delete expired agent:', error);
+            } finally {
+                setAgents((prev) => prev.filter((existing) => existing.id !== agent.id));
+                clearExpiryTimer(agent.id);
+            }
+        }, delay);
+
+        expiryTimers.current.set(agent.id, timeoutId);
+    }, [clearExpiryTimer]);
 
     const fetchData = useCallback(async () => {
         setLoading(true);
@@ -333,22 +389,71 @@ const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
                 getStandaloneKeys(),
                 getKeyLogs(),
             ]);
+            const now = Date.now();
+            const activeAgents: Agent[] = [];
+            const expiredAgents: Agent[] = [];
+
+            agentsData.forEach((agent) => {
+                if (agent.expiresAt) {
+                    const expiresAt = new Date(agent.expiresAt).getTime();
+                    if (!Number.isNaN(expiresAt) && expiresAt <= now) {
+                        expiredAgents.push(agent);
+                        return;
+                    }
+                }
+                activeAgents.push(agent);
+            });
+
+            if (expiredAgents.length > 0) {
+                await Promise.all(
+                    expiredAgents.map((agent) =>
+                        deleteAgent(agent.id).catch((error) => {
+                            console.error('Failed to delete expired agent during sync:', error);
+                        }),
+                    ),
+                );
+            }
+
             setPlatforms(platformsData);
-            setAgents(agentsData);
+            setAgents(activeAgents);
             setBots(botsData);
             setApplications(appsData);
             setStandaloneKeys(keysData);
             setKeyLogs(logsData);
+
+            if (typeof window !== 'undefined') {
+                const activeIds = new Set(activeAgents.map((agent) => agent.id));
+                activeAgents.forEach((agent) => {
+                    scheduleAgentExpiry(agent);
+                });
+
+                expiryTimers.current.forEach((timerId, agentId) => {
+                    if (!activeIds.has(agentId)) {
+                        window.clearTimeout(timerId);
+                        expiryTimers.current.delete(agentId);
+                    }
+                });
+            }
         } catch (error) {
             console.error("Failed to fetch data:", error);
         } finally {
             setLoading(false);
         }
-    }, []);
+    }, [scheduleAgentExpiry]);
 
     useEffect(() => {
         fetchData();
     }, [fetchData]);
+
+    useEffect(() => () => {
+        if (typeof window === 'undefined') {
+            return;
+        }
+        expiryTimers.current.forEach((timerId) => {
+            window.clearTimeout(timerId);
+        });
+        expiryTimers.current.clear();
+    }, []);
 
     const value = useMemo(() => ({
         agents,
@@ -426,6 +531,17 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
             const agents = await getAgents();
             const foundAgent = agents.find(agent => agent.username === username && agent.password === password);
             if (foundAgent) {
+                if (foundAgent.expiresAt) {
+                    const expiresAt = new Date(foundAgent.expiresAt).getTime();
+                    if (!Number.isNaN(expiresAt) && expiresAt <= Date.now()) {
+                        try {
+                            await deleteAgent(foundAgent.id);
+                        } catch (error) {
+                            console.error('Failed to delete expired agent during login:', error);
+                        }
+                        return 'invalid';
+                    }
+                }
                 if (foundAgent.status === 'banned') {
                     return 'banned';
                 }

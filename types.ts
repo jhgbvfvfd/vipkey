@@ -29,6 +29,7 @@ export interface Agent {
   parentId?: string;
   welcomeAcknowledged?: boolean;
   welcomeAcknowledgedAt?: string;
+  expiresAt?: string;
 }
 
 export interface StandaloneKey extends ApiKey {

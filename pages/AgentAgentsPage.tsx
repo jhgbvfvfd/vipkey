@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useData, useSettings, useAuth } from '../App';
 import { Agent, CreditHistoryEntry } from '../types';
 import Card, { CardHeader, CardTitle, CardContent } from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import Modal from '../components/ui/Modal';
 import Input from '../components/ui/Input';
+import CountdownDisplay from '../components/ui/CountdownDisplay';
 import { addAgent, updateAgent, deleteAgent } from '../services/firebaseService';
 
 const MAX_CREDIT_TRANSFER = 1_000_000;
@@ -17,14 +18,20 @@ const AgentAgentsPage: React.FC = () => {
   const myAgents = agents.filter(a => a.parentId === parent.id);
 
   const [isAddModal, setAddModal] = useState(false);
-  const [newAgent, setNewAgent] = useState({ username: '', password: '', credits: 100 });
+  const [newAgent, setNewAgent] = useState({ username: '', password: '', credits: 100, expiresAt: '' });
   const [selected, setSelected] = useState<Agent | null>(null);
   const [creditsToAdd, setCreditsToAdd] = useState(100);
   const [isCreditModal, setCreditModal] = useState(false);
+  const minExpirationValue = useMemo(() => {
+    const now = new Date();
+    now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+    return now.toISOString().slice(0, 16);
+  }, []);
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     const initialCredits = newAgent.credits;
+    let expiresAtIso: string | undefined;
     if (!Number.isFinite(initialCredits) || initialCredits <= 0) {
       notify('กรุณากรอกเครดิตเริ่มต้นมากกว่า 0', 'error');
       return;
@@ -36,6 +43,18 @@ const AgentAgentsPage: React.FC = () => {
     if (parent.credits < initialCredits) {
       notify('เครดิตไม่พอ', 'error');
       return;
+    }
+    if (newAgent.expiresAt) {
+      const expiresAtDate = new Date(newAgent.expiresAt);
+      if (Number.isNaN(expiresAtDate.getTime())) {
+        notify('กรุณาเลือกวันและเวลาหมดอายุที่ถูกต้อง', 'error');
+        return;
+      }
+      if (expiresAtDate.getTime() <= Date.now()) {
+        notify('วันหมดอายุต้องอยู่ในอนาคต', 'error');
+        return;
+      }
+      expiresAtIso = expiresAtDate.toISOString();
     }
     if (!window.confirm(`ยืนยันสร้างตัวแทนนี้และหักเครดิต ${initialCredits}?`)) return;
     const newId = `agent-${Date.now().toString(36)}`;
@@ -64,6 +83,7 @@ const AgentAgentsPage: React.FC = () => {
       status: 'active',
       parentId: parent.id,
       welcomeAcknowledged: false,
+      expiresAt: expiresAtIso,
     });
     const updatedParent: Agent = {
       ...parent,
@@ -74,7 +94,7 @@ const AgentAgentsPage: React.FC = () => {
     updateUserData(updatedParent);
     refreshData();
     setAddModal(false);
-    setNewAgent({ username: '', password: '', credits: 100 });
+    setNewAgent({ username: '', password: '', credits: 100, expiresAt: '' });
     notify('สร้างตัวแทนแล้ว');
   };
 
@@ -168,6 +188,19 @@ const AgentAgentsPage: React.FC = () => {
                 </div>
               </CardHeader>
               <CardContent>
+                {a.expiresAt ? (
+                  <CountdownDisplay
+                    target={a.expiresAt}
+                    className="mb-3"
+                    title="บัญชีหมดอายุใน"
+                    expiredLabel="บัญชีนี้หมดอายุแล้ว ระบบจะลบให้อัตโนมัติ"
+                    accentLabel="ลบอัตโนมัติ"
+                  />
+                ) : (
+                  <div className="mb-3 rounded-2xl border border-slate-200 bg-slate-50 p-3 text-xs text-slate-500">
+                    ยังไม่ได้ตั้งวันหมดอายุสำหรับบัญชีนี้
+                  </div>
+                )}
                 <div className="flex gap-2 mb-2">
                   <Button size="sm" onClick={() => openAddCredits(a)} className="flex-1">เติมเครดิต</Button>
                   <Button size="sm" variant={a.status === 'banned' ? 'secondary' : 'danger'} onClick={() => handleBan(a)} className="flex-1">{a.status === 'banned' ? 'ปลดแบน' : 'แบน'}</Button>
@@ -200,6 +233,14 @@ const AgentAgentsPage: React.FC = () => {
             }}
             required
           />
+          <Input
+            label="วันและเวลาหมดอายุ"
+            type="datetime-local"
+            value={newAgent.expiresAt}
+            min={minExpirationValue}
+            onChange={e => setNewAgent({ ...newAgent, expiresAt: e.target.value })}
+          />
+          <p className="-mt-2 text-xs text-slate-500">ระบบจะลบตัวแทนนี้ให้อัตโนมัติเมื่อครบกำหนด</p>
           <div className="flex justify-end gap-2">
             <Button type="button" variant="secondary" onClick={() => setAddModal(false)}>ยกเลิก</Button>
             <Button type="submit">บันทึก</Button>
