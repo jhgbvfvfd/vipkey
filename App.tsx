@@ -128,6 +128,8 @@ const defaultMaintenanceState: MaintenanceConfig = {
   enabled: false,
   message: 'ระบบกำลังปิดปรับปรุงเพื่ออัปเดต',
   allowedAdminIps: [],
+  scheduledStart: undefined,
+  scheduledEnd: undefined,
 };
 
 const sanitizeIps = (ips?: string[]): string[] => {
@@ -135,6 +137,59 @@ const sanitizeIps = (ips?: string[]): string[] => {
   return ips
     .map((ip) => (typeof ip === 'string' ? ip.trim() : ''))
     .filter((ip) => ip.length > 0);
+};
+
+const normalizeScheduleDate = (value?: string): string | undefined => {
+  if (typeof value !== 'string') {
+    return undefined;
+  }
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) {
+    return undefined;
+  }
+  return parsed.toISOString();
+};
+
+const normalizeMaintenanceConfig = (incoming?: MaintenanceConfig): MaintenanceConfig => {
+  if (!incoming) {
+    return { ...defaultMaintenanceState };
+  }
+  return {
+    ...defaultMaintenanceState,
+    ...incoming,
+    allowedAdminIps: sanitizeIps(incoming.allowedAdminIps),
+    scheduledStart: normalizeScheduleDate(incoming.scheduledStart),
+    scheduledEnd: normalizeScheduleDate(incoming.scheduledEnd),
+  };
+};
+
+const shouldAutoResumeMaintenance = (config: MaintenanceConfig, now: number = Date.now()): boolean => {
+  if (!config.enabled || !config.scheduledEnd) {
+    return false;
+  }
+  const endTime = new Date(config.scheduledEnd).getTime();
+  if (Number.isNaN(endTime)) {
+    return false;
+  }
+  return endTime <= now;
+};
+
+const isMaintenanceWindowActive = (config: MaintenanceConfig, now: number = Date.now()): boolean => {
+  if (!config.enabled) {
+    return false;
+  }
+  const startTime = config.scheduledStart ? new Date(config.scheduledStart).getTime() : undefined;
+  const endTime = config.scheduledEnd ? new Date(config.scheduledEnd).getTime() : undefined;
+
+  if (typeof startTime === 'number' && !Number.isNaN(startTime) && now < startTime) {
+    return false;
+  }
+
+  if (typeof endTime === 'number' && !Number.isNaN(endTime) && now >= endTime) {
+    return false;
+  }
+
+  return true;
 };
 
 const MaintenanceProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -145,11 +200,21 @@ const MaintenanceProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setLoading(true);
     try {
       const remote = await getMaintenanceConfig();
-      setConfig({
-        ...defaultMaintenanceState,
-        ...remote,
-        allowedAdminIps: sanitizeIps(remote.allowedAdminIps),
-      });
+      const normalized = normalizeMaintenanceConfig(remote);
+      const shouldResume = shouldAutoResumeMaintenance(normalized);
+      const resolved = shouldResume
+        ? { ...normalized, enabled: false, scheduledStart: undefined, scheduledEnd: undefined }
+        : normalized;
+
+      if (shouldResume) {
+        try {
+          await saveMaintenanceConfig(resolved);
+        } catch (error) {
+          console.error('Failed to auto resume maintenance config:', error);
+        }
+      }
+
+      setConfig(resolved);
     } catch (error) {
       console.error('Failed to refresh maintenance config:', error);
       setConfig(defaultMaintenanceState);
@@ -159,14 +224,14 @@ const MaintenanceProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const update = useCallback(async (nextConfig: MaintenanceConfig) => {
-    const normalized: MaintenanceConfig = {
-      ...defaultMaintenanceState,
-      ...nextConfig,
-      allowedAdminIps: sanitizeIps(nextConfig.allowedAdminIps),
-    };
+    const normalized = normalizeMaintenanceConfig(nextConfig);
+    const shouldResume = shouldAutoResumeMaintenance(normalized);
+    const resolved = shouldResume
+      ? { ...normalized, enabled: false, scheduledStart: undefined, scheduledEnd: undefined }
+      : normalized;
     try {
-      await saveMaintenanceConfig(normalized);
-      setConfig(normalized);
+      await saveMaintenanceConfig(resolved);
+      setConfig(resolved);
     } catch (error) {
       console.error('Failed to save maintenance config:', error);
       throw error;
@@ -176,6 +241,28 @@ const MaintenanceProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     refresh();
   }, [refresh]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+    if (!config.enabled || !config.scheduledEnd) {
+      return;
+    }
+    const endTime = new Date(config.scheduledEnd).getTime();
+    if (Number.isNaN(endTime)) {
+      return;
+    }
+    const delay = endTime - Date.now();
+    if (delay <= 0) {
+      refresh();
+      return;
+    }
+    const timer = window.setTimeout(() => {
+      refresh();
+    }, delay + 1000);
+    return () => window.clearTimeout(timer);
+  }, [config.enabled, config.scheduledEnd, refresh]);
 
   const value = useMemo(
     () => ({ config, loading, refresh, update }),
@@ -287,8 +374,24 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
         if (!options?.skipMaintenanceCheck) {
             try {
                 const maintenance = await getMaintenanceConfig();
-                if (maintenance.enabled) {
-                    const allowedIps = sanitizeIps(maintenance.allowedAdminIps);
+                let normalizedMaintenance = normalizeMaintenanceConfig(maintenance);
+                if (shouldAutoResumeMaintenance(normalizedMaintenance)) {
+                    const resumedMaintenance = {
+                        ...normalizedMaintenance,
+                        enabled: false,
+                        scheduledStart: undefined,
+                        scheduledEnd: undefined,
+                    };
+                    try {
+                        await saveMaintenanceConfig(resumedMaintenance);
+                    } catch (error) {
+                        console.error('Failed to auto resume maintenance config during login:', error);
+                    }
+                    normalizedMaintenance = resumedMaintenance;
+                }
+
+                if (isMaintenanceWindowActive(normalizedMaintenance)) {
+                    const allowedIps = sanitizeIps(normalizedMaintenance.allowedAdminIps);
                     const ipAllowed = options?.clientIp ? allowedIps.includes(options.clientIp.trim()) : false;
                     const isAdminAttempt = username === 'admin';
                     if (!isAdminAttempt || !ipAllowed) {

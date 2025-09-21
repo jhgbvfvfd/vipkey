@@ -207,10 +207,23 @@ export const deleteIpBan = async (userId: string, id: string): Promise<void> => 
     await deleteData(`ip_bans/${userId}/${id}`);
 };
 
+const sanitizeIsoDate = (value?: string): string | undefined => {
+    if (typeof value !== 'string') {
+        return undefined;
+    }
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) {
+        return undefined;
+    }
+    return date.toISOString();
+};
+
 const defaultMaintenanceConfig: MaintenanceConfig = {
     enabled: false,
     message: 'ระบบกำลังปิดปรับปรุงเพื่ออัปเดต',
     allowedAdminIps: [],
+    scheduledStart: undefined,
+    scheduledEnd: undefined,
 };
 
 export const getMaintenanceConfig = async (): Promise<MaintenanceConfig> => {
@@ -223,6 +236,8 @@ export const getMaintenanceConfig = async (): Promise<MaintenanceConfig> => {
                 allowedAdminIps: Array.isArray(data.allowedAdminIps)
                     ? data.allowedAdminIps.filter((ip) => typeof ip === 'string' && ip.trim().length > 0)
                     : defaultMaintenanceConfig.allowedAdminIps,
+                scheduledStart: sanitizeIsoDate(data.scheduledStart),
+                scheduledEnd: sanitizeIsoDate(data.scheduledEnd),
             };
         }
     } catch (error) {

@@ -83,4 +83,6 @@ export interface MaintenanceConfig {
     allowedAdminIps?: string[];
     updatedAt?: string;
     updatedBy?: string;
+    scheduledStart?: string;
+    scheduledEnd?: string;
 }

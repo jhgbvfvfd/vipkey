@@ -15,7 +15,7 @@ const LoginPage: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showIntroModal, setShowIntroModal] = useState(false);
   const { login } = useAuth();
-  const { notify, t } = useSettings();
+  const { notify, t, settings } = useSettings();
   const { config: maintenanceConfig, loading: maintenanceLoading } = useMaintenance();
   const [clientIp, setClientIp] = useState<string | null>(null);
   const [ipLoading, setIpLoading] = useState(true);
@@ -69,18 +69,48 @@ const LoginPage: React.FC = () => {
     };
   }, []);
 
-  useEffect(() => {
+  const locale = useMemo(() => (settings.language === 'th' ? 'th-TH' : 'en-US'), [settings.language]);
+  const maintenanceActive = useMemo(() => {
     if (!maintenanceConfig.enabled) {
+      return false;
+    }
+    const now = Date.now();
+    const startTime = maintenanceConfig.scheduledStart
+      ? new Date(maintenanceConfig.scheduledStart).getTime()
+      : undefined;
+    const endTime = maintenanceConfig.scheduledEnd
+      ? new Date(maintenanceConfig.scheduledEnd).getTime()
+      : undefined;
+    if (typeof startTime === 'number' && !Number.isNaN(startTime) && now < startTime) {
+      return false;
+    }
+    if (typeof endTime === 'number' && !Number.isNaN(endTime) && now >= endTime) {
+      return false;
+    }
+    return true;
+  }, [maintenanceConfig.enabled, maintenanceConfig.scheduledStart, maintenanceConfig.scheduledEnd]);
+
+  useEffect(() => {
+    if (!maintenanceActive) {
       setBlockedByMaintenance(false);
     }
-  }, [maintenanceConfig.enabled]);
+  }, [maintenanceActive]);
 
   const allowedIps = useMemo(() => maintenanceConfig.allowedAdminIps ?? [], [maintenanceConfig.allowedAdminIps]);
   const ipAllowed = useMemo(() => {
     if (!clientIp) return false;
     return allowedIps.includes(clientIp.trim());
   }, [allowedIps, clientIp]);
-  const maintenanceActive = maintenanceConfig.enabled;
+  const maintenanceScheduleEnd = useMemo(() => {
+    if (!maintenanceConfig.scheduledEnd) {
+      return null;
+    }
+    const date = new Date(maintenanceConfig.scheduledEnd);
+    if (Number.isNaN(date.getTime())) {
+      return null;
+    }
+    return date.toLocaleString(locale);
+  }, [maintenanceConfig.scheduledEnd, locale]);
   const waitingForAccess = maintenanceActive && !blockedByMaintenance && !ipAllowed && (maintenanceLoading || ipLoading);
   const maintenanceMessage = maintenanceConfig.message?.trim() || t('maintenanceDefaultMessage');
   const shouldShowMaintenanceView = maintenanceActive && !waitingForAccess && (!ipAllowed || blockedByMaintenance);
@@ -155,15 +185,20 @@ const LoginPage: React.FC = () => {
                       <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-r from-sky-500 via-blue-500 to-indigo-500 shadow-lg shadow-blue-500/40">
                         <LockClosedIcon className="h-10 w-10 text-white" />
                       </div>
-                      <div className="space-y-3">
-                        <h3 className="text-2xl font-semibold text-white">{t('maintenanceModeTitle')}</h3>
-                        <p className="text-sm text-slate-300">{maintenanceMessage}</p>
-                        <p className="text-xs text-slate-400">{t('maintenanceAdminOnly')}</p>
-                        <p className="text-xs text-slate-500">
-                          {t('maintenanceYourIp')}{' '}
-                          <span className="font-mono text-slate-200">{clientIp && clientIp.length > 0 ? clientIp : '-'}</span>
-                        </p>
-                      </div>
+                  <div className="space-y-3">
+                    <h3 className="text-2xl font-semibold text-white">{t('maintenanceModeTitle')}</h3>
+                    <p className="text-sm text-slate-300">{maintenanceMessage}</p>
+                    <p className="text-xs text-slate-400">{t('maintenanceAdminOnly')}</p>
+                    {maintenanceScheduleEnd && (
+                      <p className="text-xs text-slate-400">
+                        {t('maintenanceScheduleAutoResume')} {maintenanceScheduleEnd}
+                      </p>
+                    )}
+                    <p className="text-xs text-slate-500">
+                      {t('maintenanceYourIp')}{' '}
+                      <span className="font-mono text-slate-200">{clientIp && clientIp.length > 0 ? clientIp : '-'}</span>
+                    </p>
+                  </div>
                       <Button onClick={() => window.location.reload()} className="w-full">
                         {t('maintenanceRefresh')}
                       </Button>
@@ -176,6 +211,11 @@ const LoginPage: React.FC = () => {
                             {t('maintenanceModeTitle')}
                           </p>
                           <p className="mt-2 text-slate-200/80">{t('maintenanceAdminOnly')}</p>
+                          {maintenanceScheduleEnd && (
+                            <p className="mt-2 text-xs text-slate-300">
+                              {t('maintenanceScheduleAutoResume')} {maintenanceScheduleEnd}
+                            </p>
+                          )}
                         </div>
                       )}
                       <form onSubmit={handleSubmit} className="space-y-5">
