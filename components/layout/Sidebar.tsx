@@ -65,8 +65,10 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
         onClick={() => setIsOpen(false)}
       ></div>
       
-      <aside className={`w-64 flex-shrink-0 bg-white border-r border-slate-200 p-4 flex flex-col justify-between fixed inset-y-0 left-0 z-40 transform transition-transform duration-300 ease-in-out md:relative md:translate-x-0 ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}>
-        <div>
+      <aside
+        className={`w-64 flex-shrink-0 bg-white border-r border-slate-200 p-4 flex flex-col justify-between fixed inset-y-0 left-0 z-40 transform transition-transform duration-300 ease-in-out md:relative md:translate-x-0 ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}
+      >
+        <div className="flex flex-col flex-1 min-h-0">
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center">
               <Logo className="mr-3 h-12 w-12 shadow-lg shadow-blue-200/60" />
@@ -82,7 +84,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
                 <p className="text-sm text-slate-500">สถานะ: ออนไลน์</p>
             </div>
 
-          <nav>
+          <nav className="flex-1 overflow-y-auto pr-1 -mr-1">
             <ul>
               {navLinks.map((link) => (
                 <li key={link.to}>
