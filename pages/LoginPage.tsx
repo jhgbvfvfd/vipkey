@@ -14,6 +14,13 @@ type CountdownState = {
   seconds: number;
 };
 
+const accentMatrix = [
+  'ADMIN • BOT • CSCODE',
+  'SECURE • ACCESS • CONTROL',
+  'VIPKEY • PLATFORM • ONLINE',
+  'AGENT • CREDIT • SYNC',
+];
+
 const LoginPage: React.FC = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -192,37 +199,56 @@ const LoginPage: React.FC = () => {
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-slate-950">
-      <div className="pointer-events-none absolute inset-0">
-        <div className="absolute -top-40 -left-32 h-[28rem] w-[28rem] rounded-full bg-sky-500/30 blur-3xl" />
-        <div className="absolute bottom-[-6rem] right-[-4rem] h-[26rem] w-[26rem] rounded-full bg-purple-500/25 blur-3xl" />
-        <div className="absolute inset-0 bg-gradient-to-br from-slate-900/70 via-slate-950 to-slate-900/80" />
-        <div
-          className="absolute inset-0"
-          style={{ background: 'radial-gradient(circle at top, rgba(14,165,233,0.18), transparent 60%)' }}
-        />
+      <div className="pointer-events-none absolute inset-0 overflow-hidden">
+        <div className="absolute -top-48 -left-40 h-[32rem] w-[32rem] rounded-full bg-sky-500/25 blur-3xl animate-aurora" />
+        <div className="absolute -bottom-32 right-[-12%] h-[30rem] w-[30rem] rounded-full bg-indigo-500/20 blur-3xl animate-orbit" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(56,189,248,0.18),transparent_62%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom,rgba(79,70,229,0.12),transparent_68%)]" />
+        <div className="absolute inset-0 bg-[linear-gradient(120deg,rgba(15,23,42,0.85),rgba(15,23,42,0.65),rgba(15,23,42,0.9))]" />
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(148,163,184,0.07)_1px,transparent_1px)] bg-[length:100%_38px] opacity-30" />
+        <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(148,163,184,0.05)_1px,transparent_1px)] bg-[length:36px_100%] opacity-20" />
+        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-sky-500/40 to-transparent animate-shimmer" />
+        <div className="absolute inset-0 translate-y-[-30%] bg-gradient-to-b from-transparent via-sky-400/10 to-transparent opacity-50 animate-scan-slow" />
       </div>
       <div className="relative z-10 flex min-h-screen flex-col items-center justify-center px-4 py-12">
-        <div className="w-full max-w-md animate-fade-up">
-          <div className="rounded-[32px] bg-gradient-to-br from-sky-500/35 via-blue-500/25 to-indigo-500/40 p-[1px] shadow-[0_35px_65px_-25px_rgba(14,165,233,0.55)] backdrop-blur">
-            <Card className="relative overflow-hidden !rounded-[32px] !border-white/10 !bg-slate-950/85 p-8 text-slate-100">
-              <div
-                className="pointer-events-none absolute inset-0"
-                style={{ background: 'radial-gradient(circle at top, rgba(59,130,246,0.16), transparent 72%)' }}
-              />
+        <div className="w-full max-w-md md:max-w-lg animate-fade-up">
+          <div className="group relative rounded-[38px] bg-gradient-to-br from-sky-500/30 via-blue-500/20 to-indigo-500/35 p-[1.5px] shadow-[0_45px_85px_-45px_rgba(14,165,233,0.9)] backdrop-blur">
+            <div className="absolute -inset-[32%] rounded-[48px] bg-gradient-to-br from-sky-500/15 via-blue-500/10 to-indigo-500/15 opacity-60 blur-3xl transition duration-700 group-hover:opacity-90" />
+            <div className="absolute inset-0 rounded-[38px] bg-slate-950/85" />
+            <Card className="relative overflow-hidden !rounded-[38px] !border-white/10 !bg-slate-950/85 px-8 py-10 text-slate-100">
+              <div className="pointer-events-none absolute inset-0">
+                <div className="absolute inset-x-10 top-10 flex flex-col gap-2 text-[0.55rem] uppercase tracking-[0.45em] text-sky-200/15">
+                  {accentMatrix.map((row, index) => (
+                    <span key={row} className="animate-pulse-slow" style={{ animationDelay: `${index * 1.1}s` }}>
+                      {row}
+                    </span>
+                  ))}
+                </div>
+                <div className="absolute inset-0 rounded-[34px] border border-white/10" />
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(59,130,246,0.18),transparent_70%)]" />
+                <div className="absolute inset-x-0 bottom-0 h-48 bg-gradient-to-t from-slate-950/95 via-slate-950/30 to-transparent" />
+              </div>
               <div className="relative">
                 <CardHeader className="!border-none !p-0 text-center">
-                  <div className="flex flex-col items-center space-y-4">
-                    <Logo className="h-24 w-24" />
-                    <div className="space-y-1">
-                      <p className="text-xs uppercase tracking-[0.55em] text-sky-300/90">ADMIN BOT CSCODE</p>
+                  <div className="flex flex-col items-center space-y-5">
+                    <div className="relative">
+                      <span className="absolute -inset-4 rounded-full bg-sky-500/30 blur-2xl animate-pulse-slow" />
+                      <Logo className="h-24 w-24" />
+                    </div>
+                    <div className="space-y-2">
+                      <p className="text-xs uppercase tracking-[0.55em] text-sky-300/80">ADMIN BOT CSCODE</p>
                       <CardTitle className="text-3xl font-semibold !text-white">{t('login')}</CardTitle>
-                      <p className="text-sm text-slate-400">
+                      <div className="flex flex-wrap items-center justify-center gap-2 text-[0.65rem] uppercase tracking-[0.45em] text-sky-300/60">
+                        <span className="rounded-full border border-sky-500/40 bg-sky-500/10 px-3 py-1">secure access</span>
+                        <span className="rounded-full border border-indigo-500/40 bg-indigo-500/10 px-3 py-1">cscode</span>
+                      </div>
+                      <p className="text-sm text-slate-400 leading-relaxed">
                         ลงชื่อเข้าใช้งานด้วยข้อมูลที่ได้รับมอบหมายเพื่อเริ่มจัดการระบบได้ทันที
                       </p>
                     </div>
                   </div>
                 </CardHeader>
-                <CardContent className="mt-6 space-y-5 !border-none !p-0 !text-slate-200">
+                <CardContent className="mt-8 space-y-6 !border-none !p-0 !text-slate-200">
                   {waitingForAccess ? (
                     <div className="flex flex-col items-center gap-4 py-8">
                       <div className="h-12 w-12 animate-spin rounded-full border-2 border-sky-400 border-t-transparent" />
@@ -292,7 +318,7 @@ const LoginPage: React.FC = () => {
                   ) : (
                     <>
                       {maintenanceActive && ipAllowed && (
-                        <div className="rounded-xl border border-sky-500/30 bg-sky-500/10 p-4 text-left text-sm text-slate-200">
+                        <div className="rounded-2xl border border-sky-500/30 bg-gradient-to-r from-sky-500/15 via-blue-500/10 to-indigo-500/15 p-4 text-left text-sm text-slate-200 shadow-[0_18px_45px_-30px_rgba(59,130,246,0.65)] backdrop-blur">
                           <p className="text-xs font-semibold uppercase tracking-[0.4em] text-sky-200/90">
                             {t('maintenanceModeTitle')}
                           </p>
@@ -350,19 +376,22 @@ const LoginPage: React.FC = () => {
                             />
                             {t('rememberMe')}
                           </label>
-                          <a href="#" className="text-sky-300 transition-colors hover:text-sky-200">
+                          <a href="#" className="text-sky-200 transition-colors hover:text-sky-100">
                             ลืมรหัสผ่าน?
                           </a>
                         </div>
                         <Button
                           type="submit"
-                          className="mt-2 w-full !py-3 bg-gradient-to-r from-sky-500 via-blue-500 to-indigo-500 !text-base tracking-wide text-white shadow-[0_20px_45px_-18px_rgba(56,189,248,0.7)] transition [box-shadow:0px_18px_35px_-20px_rgba(59,130,246,0.8)] hover:from-sky-400 hover:via-blue-500 hover:to-indigo-600 focus:!ring-sky-300/60"
+                          className="group relative mt-2 w-full !rounded-xl !px-6 !py-3 overflow-hidden bg-gradient-to-r from-sky-500 via-blue-500 to-indigo-500 !text-base font-semibold tracking-wide text-white shadow-[0_28px_55px_-28px_rgba(59,130,246,0.85)] transition hover:-translate-y-0.5"
                           disabled={loading}
                         >
-                          {loading ? 'กำลังตรวจสอบ...' : t('login')}
+                          <span className="relative z-10">{loading ? 'กำลังตรวจสอบ...' : t('login')}</span>
+                          <span className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-500 group-hover:opacity-100">
+                            <span className="absolute inset-0 animate-shimmer bg-[linear-gradient(120deg,rgba(255,255,255,0),rgba(255,255,255,0.45),rgba(255,255,255,0))]" />
+                          </span>
                         </Button>
                       </form>
-                      <p className="text-center text-xs text-slate-400">
+                      <p className="text-center text-xs text-slate-400/80">
                         หากต้องการเปลี่ยนรหัสผ่านของแอดมิน สามารถดำเนินการได้ที่เมนู “ตั้งรหัสผ่านใหม่” และใช้รหัสผ่านใหม่ในการเข้าสู่ระบบถัดไป
                       </p>
                     </>
