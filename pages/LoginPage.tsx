@@ -7,6 +7,13 @@ import Logo from '../components/ui/Logo';
 import Modal from '../components/ui/Modal';
 import { UserIcon, LockClosedIcon, EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
 
+type CountdownState = {
+  days: number;
+  hours: number;
+  minutes: number;
+  seconds: number;
+};
+
 const LoginPage: React.FC = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -20,6 +27,7 @@ const LoginPage: React.FC = () => {
   const [clientIp, setClientIp] = useState<string | null>(null);
   const [ipLoading, setIpLoading] = useState(true);
   const [blockedByMaintenance, setBlockedByMaintenance] = useState(false);
+  const [countdown, setCountdown] = useState<CountdownState | null>(null);
 
   useEffect(() => {
     const remembered = localStorage.getItem('rememberUser');
@@ -101,19 +109,59 @@ const LoginPage: React.FC = () => {
     if (!clientIp) return false;
     return allowedIps.includes(clientIp.trim());
   }, [allowedIps, clientIp]);
-  const maintenanceScheduleEnd = useMemo(() => {
+  const scheduledEndTimestamp = useMemo(() => {
     if (!maintenanceConfig.scheduledEnd) {
       return null;
     }
     const date = new Date(maintenanceConfig.scheduledEnd);
-    if (Number.isNaN(date.getTime())) {
+    const value = date.getTime();
+    if (Number.isNaN(value)) {
       return null;
     }
-    return date.toLocaleString(locale);
-  }, [maintenanceConfig.scheduledEnd, locale]);
+    return value;
+  }, [maintenanceConfig.scheduledEnd]);
+
+  const maintenanceScheduleEnd = useMemo(() => {
+    if (!scheduledEndTimestamp) {
+      return null;
+    }
+    return new Date(scheduledEndTimestamp).toLocaleString(locale);
+  }, [scheduledEndTimestamp, locale]);
   const waitingForAccess = maintenanceActive && !blockedByMaintenance && !ipAllowed && (maintenanceLoading || ipLoading);
   const maintenanceMessage = maintenanceConfig.message?.trim() || t('maintenanceDefaultMessage');
   const shouldShowMaintenanceView = maintenanceActive && !waitingForAccess && (!ipAllowed || blockedByMaintenance);
+
+  useEffect(() => {
+    if (!maintenanceConfig.enabled || !scheduledEndTimestamp) {
+      setCountdown(null);
+      return;
+    }
+
+    const updateCountdown = () => {
+      const now = Date.now();
+      const diff = scheduledEndTimestamp - now;
+
+      if (diff <= 0) {
+        setCountdown(null);
+        return;
+      }
+
+      const totalSeconds = Math.floor(diff / 1000);
+      const days = Math.floor(totalSeconds / 86400);
+      const hours = Math.floor((totalSeconds % 86400) / 3600);
+      const minutes = Math.floor((totalSeconds % 3600) / 60);
+      const seconds = totalSeconds % 60;
+
+      setCountdown({ days, hours, minutes, seconds });
+    };
+
+    updateCountdown();
+    const interval = window.setInterval(updateCountdown, 1000);
+
+    return () => {
+      window.clearInterval(interval);
+    };
+  }, [maintenanceConfig.enabled, scheduledEndTimestamp]);
 
   const handleIntroAccept = () => {
     localStorage.setItem('vipkey_intro_ack', 'true');
@@ -199,6 +247,44 @@ const LoginPage: React.FC = () => {
                       <span className="font-mono text-slate-200">{clientIp && clientIp.length > 0 ? clientIp : '-'}</span>
                     </p>
                   </div>
+                      {countdown && (
+                        <div className="mt-8 space-y-4">
+                          <p className="text-[0.65rem] uppercase tracking-[0.55em] text-sky-200/80">
+                            {t('maintenanceCountdownHeading')}
+                          </p>
+                          <div className="flex flex-wrap justify-center gap-3">
+                            {(countdown.days > 0
+                              ? [
+                                  { label: t('maintenanceCountdownDays'), value: countdown.days },
+                                  { label: t('maintenanceCountdownHours'), value: countdown.hours },
+                                  { label: t('maintenanceCountdownMinutes'), value: countdown.minutes },
+                                  { label: t('maintenanceCountdownSeconds'), value: countdown.seconds }
+                                ]
+                              : [
+                                  { label: t('maintenanceCountdownHours'), value: countdown.hours },
+                                  { label: t('maintenanceCountdownMinutes'), value: countdown.minutes },
+                                  { label: t('maintenanceCountdownSeconds'), value: countdown.seconds }
+                                ]
+                            ).map((segment) => (
+                              <div
+                                key={segment.label}
+                                className="group relative flex h-24 w-24 flex-col items-center justify-center overflow-hidden rounded-[28px] bg-slate-950/80 ring-1 ring-inset ring-sky-500/35 shadow-[0_28px_55px_-30px_rgba(59,130,246,0.85)] backdrop-blur"
+                              >
+                                <div className="pointer-events-none absolute -inset-2 rounded-[32px] bg-gradient-to-br from-sky-500/30 via-blue-500/20 to-indigo-500/30 opacity-60 blur-xl transition duration-700 group-hover:opacity-90" />
+                                <div className="pointer-events-none absolute inset-px rounded-[24px] bg-slate-900/70" />
+                                <div className="relative flex flex-col items-center">
+                                  <span className="text-4xl font-bold tracking-tight text-white drop-shadow-[0_18px_35px_rgba(56,189,248,0.55)] animate-[pulse_2.8s_ease-in-out_infinite]">
+                                    {segment.value.toString().padStart(2, '0')}
+                                  </span>
+                                  <span className="mt-2 text-[0.65rem] uppercase tracking-[0.4em] text-slate-300/90">
+                                    {segment.label}
+                                  </span>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                       <Button onClick={() => window.location.reload()} className="w-full">
                         {t('maintenanceRefresh')}
                       </Button>
