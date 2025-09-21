@@ -1,4 +1,5 @@
 import { Handler } from '@netlify/functions';
+import { Buffer } from 'buffer';
 
 const FIREBASE_URL = 'https://fgddf-a6f13-default-rtdb.firebaseio.com/';
 const MAX_INITIAL_CREDITS = 1_000_000;
@@ -19,6 +20,31 @@ const jsonResponse = (statusCode: number, data: Record<string, unknown>) => ({
   body: JSON.stringify(data),
 });
 
+const ADMIN_USERNAME = 'admin';
+
+const fetchAdminPassword = async (): Promise<string> => {
+  try {
+    const response = await fetch(`${FIREBASE_URL}admin_credentials.json`);
+    if (response.ok) {
+      const data: { password?: string } | null = await response.json();
+      if (data && typeof data.password === 'string' && data.password.trim().length > 0) {
+        return data.password;
+      }
+    }
+  } catch (error) {
+    console.error('Failed to fetch admin password', error);
+  }
+
+  return 'admin';
+};
+
+const unauthorizedResponse = () =>
+  jsonResponse(401, {
+    ok: false,
+    error: 'UNAUTHORIZED',
+    message: 'ต้องเข้าสู่ระบบผู้ดูแลระบบก่อน',
+  });
+
 const handler: Handler = async (event) => {
   if (event.httpMethod === 'OPTIONS') {
     return {
@@ -35,6 +61,30 @@ const handler: Handler = async (event) => {
 
   if (event.httpMethod !== 'POST') {
     return jsonResponse(405, { ok: false, error: 'METHOD_NOT_ALLOWED' });
+  }
+
+  const authHeader = event.headers?.authorization || event.headers?.Authorization;
+  if (!authHeader || !authHeader.startsWith('Basic ')) {
+    return unauthorizedResponse();
+  }
+
+  let decoded = '';
+  try {
+    decoded = Buffer.from(authHeader.replace(/^Basic\s+/i, ''), 'base64').toString('utf-8');
+  } catch {
+    return unauthorizedResponse();
+  }
+
+  const [authUsername, ...passwordParts] = decoded.split(':');
+  const authPassword = passwordParts.join(':');
+
+  if (!authUsername || authUsername !== ADMIN_USERNAME || !authPassword) {
+    return unauthorizedResponse();
+  }
+
+  const adminPassword = await fetchAdminPassword();
+  if (authPassword !== adminPassword) {
+    return unauthorizedResponse();
   }
 
   let payload: AgentPayload = {};

@@ -188,7 +188,10 @@ const ApiGuidePage: React.FC = () => {
       method: 'POST',
       path: '/agents',
       description: t('apiGuideEndpointCreateAgentDesc'),
-      requestExample: `curl -X POST "${baseUrl}/agents" \\\n  -H "Content-Type: application/json" \\\n  -d '{
+      requestExample: `curl -X POST "${baseUrl}/agents" \
+  -u "admin:YOUR_ADMIN_PASSWORD" \
+  -H "Content-Type: application/json" \
+  -d '{
     "username": "newagent",
     "password": "StrongPassword123",
     "credits": 500
@@ -209,8 +212,8 @@ const ApiGuidePage: React.FC = () => {
 }`,
       errorExample: `{
   "ok": false,
-  "error": "USERNAME_TAKEN",
-  "message": "ชื่อผู้ใช้นี้ถูกใช้แล้ว"
+  "error": "UNAUTHORIZED",
+  "message": "ต้องเข้าสู่ระบบผู้ดูแลระบบก่อน"
 }`,
       note: t('apiGuideEndpointCreateAgentNote'),
     },
