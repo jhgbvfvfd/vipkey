@@ -1,5 +1,5 @@
 
-import { Platform, Agent, Bot, ApiKey, StandaloneKey, KeyLog, IpBan, MaintenanceConfig } from '../types';
+import { Platform, Agent, Bot, ApiKey, StandaloneKey, KeyLog, IpBan, MaintenanceConfig, Application } from '../types';
 
 // IMPORTANT: In a real application, these values should come from environment variables.
 // For this example, we are using the URL provided in the prompt.
@@ -155,6 +155,25 @@ export const updateBot = async (bot: Bot): Promise<void> => {
 
 export const deleteBot = async (botId: string): Promise<void> => {
     await deleteData(`bots/${botId}`);
+};
+
+export const getApplications = async (): Promise<Application[]> => {
+    const data = await fetchData<Record<string, Omit<Application, 'id'>>>('apps');
+    return firebaseObjectToArray(data);
+};
+
+export const addApplication = async (app: Omit<Application, 'id'> & { id: string }): Promise<void> => {
+    const { id, ...appData } = app;
+    await setData(`apps/${id}`, appData);
+};
+
+export const updateApplication = async (app: Application): Promise<void> => {
+    const { id, ...appData } = app;
+    await setData(`apps/${id}`, appData);
+};
+
+export const deleteApplication = async (appId: string): Promise<void> => {
+    await deleteData(`apps/${appId}`);
 };
 
 export const getKeyLogs = async (): Promise<KeyLog[]> => {

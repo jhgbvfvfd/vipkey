@@ -9,6 +9,7 @@ import DashboardPage from './pages/DashboardPage';
 import PlatformsPage from './pages/PlatformsPage';
 import AgentsPage from './pages/AgentsPage';
 import BotsPage from './pages/BotsPage';
+import AppsPage from './pages/AppsPage';
 import ApiGuidePage from './pages/ApiGuidePage';
 import GenerateKeyPage from './pages/GenerateKeyPage';
 import AgentDashboardPage from './pages/AgentDashboardPage';
@@ -24,8 +25,8 @@ import AgentMenusPage from './pages/AgentMenusPage';
 import AgentGenerateKeyPage from './pages/AgentGenerateKeyPage';
 import AgentAgentsPage from './pages/AgentAgentsPage';
 import MaintenancePage from './pages/MaintenancePage';
-import { Agent, Platform, Bot, StandaloneKey, KeyLog, MaintenanceConfig } from './types';
-import { getPlatforms, getAgents, getBots, getStandaloneKeys, getKeyLogs, getAdminPassword, setAdminPassword, getMaintenanceConfig, saveMaintenanceConfig } from './services/firebaseService';
+import { Agent, Platform, Bot, StandaloneKey, KeyLog, MaintenanceConfig, Application } from './types';
+import { getPlatforms, getAgents, getBots, getApplications, getStandaloneKeys, getKeyLogs, getAdminPassword, setAdminPassword, getMaintenanceConfig, saveMaintenanceConfig } from './services/firebaseService';
 
 type UserRole = 'admin' | 'agent';
 interface User {
@@ -60,6 +61,7 @@ interface DataContextType {
     agents: Agent[];
     platforms: Platform[];
     bots: Bot[];
+    applications: Application[];
     standaloneKeys: StandaloneKey[];
     keyLogs: KeyLog[];
     loading: boolean;
@@ -228,6 +230,7 @@ const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
     const [agents, setAgents] = useState<Agent[]>([]);
     const [platforms, setPlatforms] = useState<Platform[]>([]);
     const [bots, setBots] = useState<Bot[]>([]);
+    const [applications, setApplications] = useState<Application[]>([]);
     const [standaloneKeys, setStandaloneKeys] = useState<StandaloneKey[]>([]);
     const [keyLogs, setKeyLogs] = useState<KeyLog[]>([]);
     const [loading, setLoading] = useState(true);
@@ -235,16 +238,18 @@ const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
     const fetchData = useCallback(async () => {
         setLoading(true);
         try {
-            const [platformsData, agentsData, botsData, keysData, logsData] = await Promise.all([
+            const [platformsData, agentsData, botsData, appsData, keysData, logsData] = await Promise.all([
                 getPlatforms(),
                 getAgents(),
                 getBots(),
+                getApplications(),
                 getStandaloneKeys(),
                 getKeyLogs(),
             ]);
             setPlatforms(platformsData);
             setAgents(agentsData);
             setBots(botsData);
+            setApplications(appsData);
             setStandaloneKeys(keysData);
             setKeyLogs(logsData);
         } catch (error) {
@@ -262,11 +267,12 @@ const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
         agents,
         platforms,
         bots,
+        applications,
         standaloneKeys,
         keyLogs,
         loading,
         refreshData: fetchData,
-    }), [agents, platforms, bots, standaloneKeys, keyLogs, loading, fetchData]);
+    }), [agents, platforms, bots, applications, standaloneKeys, keyLogs, loading, fetchData]);
     
     return <DataContext.Provider value={value}>{children}</DataContext.Provider>;
 };
@@ -408,6 +414,7 @@ const AdminRoutes: React.FC = () => (
         <Route path="/agent-menus" element={<AgentMenusPage />} />
         <Route path="/generate-key" element={<GenerateKeyPage />} />
         <Route path="/bots" element={<BotsPage />} />
+        <Route path="/apps" element={<AppsPage />} />
         <Route path="/api-guide" element={<ApiGuidePage />} />
         <Route path="/reports" element={<ReportsPage />} />
         <Route path="/maintenance" element={<MaintenancePage />} />
@@ -425,6 +432,7 @@ const AgentRoutes: React.FC = () => (
         <Route path="/my-keys" element={<AgentKeysPage />} />
         <Route path="/generate-key" element={<AgentGenerateKeyPage />} />
         <Route path="/bots" element={<BotsPage />} />
+        <Route path="/apps" element={<AppsPage />} />
         <Route path="/profile" element={<AgentProfilePage />} />
         <Route path="/agents" element={<AgentAgentsPage />} />
         <Route path="/usage" element={<AgentUsagePage />} />

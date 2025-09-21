@@ -53,6 +53,14 @@ export interface Bot {
     tokenCost: number;
 }
 
+export interface Application {
+    id: string;
+    name: string;
+    url: string;
+    addedAt: string;
+    tokenCost: number;
+}
+
 export interface KeyLog {
     id: string;
     key: string;
